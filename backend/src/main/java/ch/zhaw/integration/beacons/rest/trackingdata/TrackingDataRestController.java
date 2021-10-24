@@ -34,14 +34,14 @@ public class TrackingDataRestController {
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/beacons/trackingData", method = RequestMethod.PUT)
-    public ResponseEntity<String> sendTrackingData(@RequestBody TrackingPutRequestData requestData){
+    @RequestMapping(value = "/beacons/storeTrackingData", method = RequestMethod.PUT)
+    public ResponseEntity sendTrackingData(@RequestBody TrackingPutRequestData requestData){
         Doctor doctor;
         try {
             doctor = doctorRepository.getOne(requestData.getDoctorId());
         } catch (EntityNotFoundException e) {
             LOGGER.error("Doctor with id: " + requestData.getDoctorId() + " is not known by the system.");
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
         for(BeaconTrackingData data : requestData.getBeaconTrackingDataList()) {
             Beacon beacon = beaconRepository.findBeaconByUidAndMajorAndMinor(data.getBeaconUid(), data.getMajor(), data.getMinor());
@@ -56,6 +56,6 @@ public class TrackingDataRestController {
                 LOGGER.warn("Beacon with uid: " + data.getBeaconUid() + " and major: " + data.getMajor() + " and minor:" + data.getMinor() + " is not known by the system.");
             }
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity(HttpStatus.OK);
     }
 }

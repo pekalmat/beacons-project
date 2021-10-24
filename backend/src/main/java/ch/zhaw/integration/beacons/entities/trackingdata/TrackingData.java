@@ -34,6 +34,8 @@ public class TrackingData implements Serializable {
     private Date treatmentStartDate;
     private Date treatmentEndDate;
 
+    private Boolean processed;
+
     public Long getId() {
         return id;
     }
@@ -68,5 +70,13 @@ public class TrackingData implements Serializable {
 
     public void setTreatmentEndDate(Date treatmentEndDate) {
         this.treatmentEndDate = treatmentEndDate;
+    }
+
+    public Boolean getProcessed() {
+        return processed;
+    }
+
+    public void setProcessed(Boolean processed) {
+        this.processed = processed;
     }
 }
