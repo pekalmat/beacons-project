@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.rest.trackingdata;
+package ch.zhaw.integration.beacons.rest.treatment;
 
 import java.io.Serializable;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons;
+package ch.zhaw.integration.beacons.utils;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

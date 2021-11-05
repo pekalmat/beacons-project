@@ -1,6 +1,6 @@
 package ch.zhaw.integration.beacons.entities.treatment;
 
-import ch.zhaw.integration.beacons.entities.doctor.Doctor;
+import ch.zhaw.integration.beacons.entities.person.doctor.Doctor;
 import ch.zhaw.integration.beacons.entities.patient.Patient;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
