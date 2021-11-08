@@ -40,16 +40,16 @@ public class TreatmentRestController {
 
     @CrossOrigin
     @RequestMapping(value =  "/beacons/treatments/new", method = RequestMethod.PUT)
-    public ResponseEntity storeNewTreatments(@RequestBody TrackingPutRequestData requestData){
+    public ResponseEntity storeNewTreatments(@RequestBody List<TreatmentDto> requestData){
         Doctor doctor;
         try {
-            doctor = doctorRepository.getOne(requestData.getDoctorId());
+            doctor = doctorRepository.getOne(requestData.get(0).getDoctorId());
         } catch (EntityNotFoundException e) {
-            LOGGER.error("Doctor with id: " + requestData.getDoctorId() + " is not known by the system.");
+            LOGGER.error("Doctor with id: " + requestData.get(0).getDoctorId() + " is not known by the system.");
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
-        for(BeaconTrackingData data : requestData.getBeaconTrackingDataList()) {
-            Beacon beacon = beaconRepository.findBeaconByUidAndMajorAndMinor(data.getBeaconUid(), data.getMajor(), data.getMinor());
+        for(TreatmentDto data : requestData) {
+            Beacon beacon = beaconRepository.findBeaconByUidAndMajorAndMinor(data.getBeaconDto().getBeaconUid(), data.getBeaconDto().getMajor(), data.getBeaconDto().getMinor());
             if(beacon != null) {
                 Treatment treatment = new Treatment();
                 treatment.setDoctor(doctor);
@@ -58,7 +58,7 @@ public class TreatmentRestController {
                 treatment.setEndTime(data.getTreatmentEnd());
                 treatmentRepository.save(treatment);
             } else {
-                LOGGER.warn("Beacon with uid: " + data.getBeaconUid() + " and major: " + data.getMajor() + " and minor:" + data.getMinor() + " is not known by the system.");
+                LOGGER.warn("Beacon with uid: " + data.getBeaconDto().getBeaconUid() + " and major: " + data.getBeaconDto().getMajor() + " and minor:" + data.getBeaconDto().getMinor() + " is not known by the system.");
                 return new ResponseEntity(HttpStatus.BAD_REQUEST);
             }
         }
