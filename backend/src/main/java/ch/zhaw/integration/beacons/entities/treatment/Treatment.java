@@ -1,7 +1,7 @@
 package ch.zhaw.integration.beacons.entities.treatment;
 
-import ch.zhaw.integration.beacons.entities.person.doctor.Doctor;
 import ch.zhaw.integration.beacons.entities.patient.Patient;
+import ch.zhaw.integration.beacons.entities.person.doctor.Doctor;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -25,10 +25,10 @@ public class Treatment implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Doctor doctor;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Patient patient;
 
     private Date startTime;

@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 public class Doctor extends Person {
 
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Treatment> treatments;
 
     public List<Treatment> getTreatments() {
