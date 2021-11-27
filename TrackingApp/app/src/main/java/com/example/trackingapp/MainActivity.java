@@ -12,32 +12,36 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
+import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+
+import java.util.Collection;
 
 public class MainActivity extends AppCompatActivity  implements MonitorNotifier {
     protected static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
+    private BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
 
     protected void onCreate(Bundle savedInstanceState){
+
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
         verifyBluetooth();
         requestPermissions();
-
         BeaconManager.getInstanceForApplication(this).addMonitorNotifier(this);
 
         if (TrackingApplication.insideRegion) {
-            logToDisplay("Beacons are visible.");
+            updateText("Beacons are visible.");
         }
         else {
-            logToDisplay("No beacons are visible.");
+            updateText("No beacons are visible.");
         }
     }
 
@@ -45,12 +49,18 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
     public void didEnterRegion(Region region) {
         Log.d(TAG,"didEnterRegion called");
         updateText("Beacon visible");
+        //becvaon id uslese + aktuelle zeit
+        // speichern map/list
     }
 
     @Override
     public void didExitRegion(Region region) {
+        // beacon-start zeit + beacon id aus list/map auslesen
+        // + aktuelle zeit (endTimme)
+        // post request an server
         Log.d(TAG,"didExitRegion called");
         updateText("Beacon not visible");
+
     }
 
     @Override
@@ -208,8 +218,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
         cumulativeLog += line+"\n";
         runOnUiThread(new Runnable() {
             public void run() {
-                TextView editText = (TextView) MainActivity.this.findViewById(R.id.monitoringText);
-                editText.setText(cumulativeLog);
+                TextView editText = (TextView) MainActivity.this.findViewById(R.id.rangingText);
+                editText.setText(line);
             }
         });
     }
@@ -223,24 +233,47 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
         });
     }
 
+
+    private boolean currentlyRanging = false;
+    public void onRanging(View view){
+        if(currentlyRanging == false) {
+            RangeNotifier rangeNotifier = new RangeNotifier() {
+                @Override
+                public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+                    if (beacons.size() > 0) {
+                        Log.d(TAG, "didRangeBeaconsInRegion called with beacon count:  " + beacons.size());
+                        Beacon firstBeacon = beacons.iterator().next();
+
+                        logToDisplay("The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.");
+                    }
+                }
+            };
+            beaconManager.addRangeNotifier(rangeNotifier);
+            beaconManager.startRangingBeacons(TrackingApplication.beaconRegion);
+            currentlyRanging = true;
+        } else{
+            beaconManager.stopRangingBeacons(TrackingApplication.beaconRegion);
+            beaconManager.removeAllRangeNotifiers();
+            currentlyRanging = false;
+        }
+    }
+
+
     public void onScan(View view) {
         // This is a toggle.  Each time we tap it, we start or stop
         Button button = (Button) findViewById(R.id.scanButton);
-        if (TrackingApplication.insideRegion) {
-            logToDisplay("Beacons are visible.");
-        }
-        else {
-            logToDisplay("No beacons are visible.");
-        }
-        /*
+
         if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
             BeaconManager.getInstanceForApplication(this).stopMonitoring(TrackingApplication.beaconRegion);
             button.setText("Enable Monitoring");
+            updateText("Monitoring deactivated");
         }
         else {
+            updateText("Beacon not visible");
             BeaconManager.getInstanceForApplication(this).startMonitoring(TrackingApplication.beaconRegion);
             button.setText("Disable Monitoring");
-        }*/
+        }
+
     }
 
 }
