@@ -16,13 +16,15 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 
-public class TrackingApplication  extends Application implements MonitorNotifier {
+public class TrackingApplication extends Application implements MonitorNotifier {
     private static final String TAG = "TrackingApplication";
     public static final Region beaconRegion = new Region("beaconRegion", null, null, null);
     public static boolean insideRegion = false;
 
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate");
+
         BeaconManager beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
 
         // By default Ithe AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
@@ -41,9 +43,7 @@ public class TrackingApplication  extends Application implements MonitorNotifier
         Notification.Builder builder = new Notification.Builder(this);
         builder.setContentTitle("Scanning for Beacons");
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
-        );
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("My Notification Channel ID",
@@ -54,13 +54,16 @@ public class TrackingApplication  extends Application implements MonitorNotifier
             notificationManager.createNotificationChannel(channel);
             builder.setChannelId(channel.getId());
         }
+
+
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
 
         beaconManager.setEnableScheduledScanJobs(false);
         beaconManager.setBackgroundBetweenScanPeriod(0);
         beaconManager.setBackgroundScanPeriod(1100);
 
-       beaconManager.addMonitorNotifier(this);
+        Log.d(TAG, "setting up background monitoring in app onCreate");
+        /*beaconManager.addMonitorNotifier(this);*/
 
         // If we were monitoring *different* regions on the last run of this app, they will be
         // remembered.  In this case we need to disable them here
@@ -68,6 +71,7 @@ public class TrackingApplication  extends Application implements MonitorNotifier
             beaconManager.stopMonitoring(region);
         }
 
+        Log.d(TAG, "Started Monitoring");
         beaconManager.startMonitoring(beaconRegion);
 
     }
