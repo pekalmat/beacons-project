@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.entities.beacon;
+package com.example.trackingapp;
 
 import java.io.Serializable;
 
@@ -7,6 +7,9 @@ public class BeaconDto implements Serializable {
     private String beaconUid;
     private String major;
     private String minor;
+
+    public BeaconDto(){
+    }
 
     public BeaconDto(String beaconUid, String major, String minor) {
         this.beaconUid = beaconUid;

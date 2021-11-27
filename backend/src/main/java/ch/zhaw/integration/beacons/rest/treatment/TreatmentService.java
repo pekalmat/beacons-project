@@ -10,6 +10,7 @@ import ch.zhaw.integration.beacons.entities.treatment.TreatmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityNotFoundException;
@@ -33,7 +34,7 @@ public class TreatmentService {
     }
 
 
-    public HttpStatus storeNewTreatment(TreatmentDto treatmentDto) {
+    public ResponseEntity<TreatmentDto> storeNewTreatment(TreatmentDto treatmentDto) {
         Doctor doctor;
         try {
             doctor = doctorRepository.getOne(treatmentDto.getDoctorId());
@@ -44,15 +45,18 @@ public class TreatmentService {
                 treatment.setPatient(beacon.getBed().getPatient());
                 treatment.setStartTime(treatmentDto.getTreatmentStart());
                 treatment.setEndTime(treatmentDto.getTreatmentEnd());
-                treatmentRepository.save(treatment);
-                return HttpStatus.OK;
+                Treatment newTreatment = treatmentRepository.save(treatment);
+                LOGGER.info("Persisted new Treatment: ID: " + newTreatment.getId());
+                return new ResponseEntity("Successfully persisted.", HttpStatus.OK);
             } else {
-                LOGGER.warn("Beacon with uid: " + treatmentDto.getBeaconDto().getBeaconUid() + " and major: " + treatmentDto.getBeaconDto().getMajor() + " and minor:" + treatmentDto.getBeaconDto().getMinor() + " is not known by the system.");
-                return HttpStatus.BAD_REQUEST;
+                String message = "Beacon with uid: " + treatmentDto.getBeaconDto().getBeaconUid() + " and major: " + treatmentDto.getBeaconDto().getMajor() + " and minor:" + treatmentDto.getBeaconDto().getMinor() + " is not known by the system.";
+                LOGGER.warn(message);
+                return new ResponseEntity(message, HttpStatus.BAD_REQUEST);
             }
         } catch (EntityNotFoundException e) {
-            LOGGER.error("Doctor with id: " + treatmentDto.getDoctorId() + " is not known by the system.");
-            return HttpStatus.BAD_REQUEST;
+            String message = "Doctor with id: " + treatmentDto.getDoctorId() + " is not known by the system.";
+            LOGGER.error(message);
+            return new ResponseEntity(message, HttpStatus.BAD_REQUEST);
         }
 
     }

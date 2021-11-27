@@ -15,27 +15,61 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity  implements MonitorNotifier, RangeNotifier {
-    protected static final String TAG = "MainActivity";
+    protected static final String TAG =  "########## MainActivity ##########";
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
     private BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
 
-    protected void onCreate(Bundle savedInstanceState){
+    private static final String HOST = "http://192.168.1.188:8081";
+    private static final String POST_NEW_TREATMENT_REQUEST_URL = HOST + "/tracking/treatments";
+    private static final String GET_ALL_BEACONS_URL = HOST + "/tracking/beacons";
+    private RequestQueue requestQueue;
 
+    private List<BeaconDto> knownBeaconsToTrack = new ArrayList<>();
+    private BeaconDto currentlyTrackedBeacon;
+    private Date currentTrackingStartTime;
+
+
+
+    protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
         verifyBluetooth();
         requestPermissions();
+
+        requestQueue = Volley.newRequestQueue(this);
+        fetchBeaconsToTrack();
+
+
         BeaconManager.getInstanceForApplication(this).addMonitorNotifier(this);
 
         if (TrackingApplication.insideRegion) {
@@ -46,9 +80,128 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
     }
 
+    private void fetchBeaconsToTrack() {
+        // Create Json-PostRequest
+        JsonArrayRequest jsonObjectRequest = new JsonArrayRequest(
+                Request.Method.GET,
+                GET_ALL_BEACONS_URL,
+                null,
+                new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Gson gson = new Gson();
+                        Type listOfMyClassObject = new TypeToken<ArrayList<BeaconDto>>() {}.getType();
+                        knownBeaconsToTrack = gson.fromJson(response.toString(), listOfMyClassObject);
+                        Log.i(TAG, "Successfully fetched " + knownBeaconsToTrack.size() + " registered Beacons.");
+                    }
+                },
+                new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG,"Could Not Fetch Beacons");
+                        Log.e(TAG, error.toString());
+                    }
+                });
+
+        // Add the Request to the RequestQueue.
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    @Override
+    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+        for (Beacon beacon: beacons) {
+            if(beaconIsRegisteredInSystem(beacon)) {
+                if (beacon.getDistance() < 1.0) {
+                    if (currentlyTrackedBeacon == null) {
+                        currentTrackingStartTime = Calendar.getInstance().getTime();
+                        currentlyTrackedBeacon = new BeaconDto(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString());
+                        Log.i(TAG, "Start Tracking Beacon UUID: " + currentlyTrackedBeacon.getBeaconUid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
+                    } else if(!beaconMatchesBeaconDto(beacon, currentlyTrackedBeacon)) {
+                        sendNewTreatmentPostRequest();
+                        Log.i(TAG, "End Tracking Beacon UUID: " + currentlyTrackedBeacon.getBeaconUid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
+                        currentlyTrackedBeacon = new BeaconDto(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString());
+                        currentTrackingStartTime = Calendar.getInstance().getTime();
+                        Log.i(TAG, "Start Tracking Beacon UUID: " + currentlyTrackedBeacon.getBeaconUid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
+                    }
+                } else if(beacon.getDistance() > 10.0) {
+                    if(currentlyTrackedBeacon != null) {
+                        if(beaconMatchesBeaconDto(beacon, currentlyTrackedBeacon)) {
+                            sendNewTreatmentPostRequest();
+                            Log.i(TAG, "End Tracking Beacon UUID: " + currentlyTrackedBeacon.getBeaconUid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
+                            currentlyTrackedBeacon = null;
+                            currentTrackingStartTime = null;
+                            Log.i(TAG, "No Beacon is tracked currently");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean beaconMatchesBeaconDto(Beacon beacon, BeaconDto beaconDto) {
+        if (beaconDto.getBeaconUid().equals(beacon.getId1().toString())
+                && beaconDto.getMajor().equals(beacon.getId2().toString())
+                && beaconDto.getMinor().equals(beacon.getId3().toString())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean beaconIsRegisteredInSystem(Beacon beacon) {
+        for (BeaconDto beaconDto : knownBeaconsToTrack) {
+            if (beaconMatchesBeaconDto(beacon, beaconDto)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private void sendNewTreatmentPostRequest() {
+        // Create request JsonBody
+        JSONObject jsonBody = createPostRequestBody();
+        // Create Json-PostRequest
+        JsonObjectRequest postNewTreatmentRequest = new JsonObjectRequest(
+                Request.Method.POST,
+                POST_NEW_TREATMENT_REQUEST_URL,
+                jsonBody,
+                response -> Log.d(TAG, "PostRequestResponse is: " + response.toString()),
+                error -> Log.d(TAG, "PostRequestError: " + error.getMessage())
+        );
+        // Add the Request to the RequestQueue.
+        Log.i(TAG, "Send Tracking Data to server: " + currentlyTrackedBeacon.getBeaconUid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
+        requestQueue.add(postNewTreatmentRequest);
+
+    }
+
+    private JSONObject createPostRequestBody() {
+        try {
+            String startTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTrackingStartTime);
+            Date endTime = java.util.Calendar.getInstance().getTime();
+            String endTimeString =new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(endTime);
+            Gson gson = new Gson();
+            String beaconJson = gson.toJson(currentlyTrackedBeacon);
+
+            final JSONObject jsonBody = new JSONObject(
+                    "{" +
+                            "\"doctorId\":\"2\"," +
+                            "\"treatmentStart\":\"" + startTimeString + "\"," +
+                            "\"treatmentEnd\":\"" + endTimeString + "\"," +
+                            "\"beaconDto\":" + beaconJson +
+                            "}");
+            return jsonBody;
+        } catch (JSONException e) {
+            Log.d(TAG,"Error Creating RequestBody");
+            e.printStackTrace();
+        }
+        return new JSONObject();
+    }
+
     @Override
     public void didEnterRegion(Region region) {
-        Log.d(TAG,"didEnterRegion called");
+        //Log.d(TAG,"didEnterRegion called");
         updateText("Beacon visible");
         //becvaon id uslese + aktuelle zeit
         // speichern map/list
@@ -65,25 +218,17 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         // beacon-start zeit + beacon id aus list/map auslesen
         // + aktuelle zeit (endTimme)
         // post request an server
-        Log.d(TAG,"didExitRegion called");
+        //Log.d(TAG,"didExitRegion called");
         updateText("Beacon not visible");
 
     }
 
     @Override
     public void didDetermineStateForRegion(int state, Region region) {
-        Log.d(TAG,"didDetermineStateForRegion called with state: " + (state == 1 ? "INSIDE ("+state+")" : "OUTSIDE ("+state+")"));
+        //Log.d(TAG,"didDetermineStateForRegion called with state: " + (state == 1 ? "INSIDE ("+state+")" : "OUTSIDE ("+state+")"));
     }
 
-    @Override
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-        for (Beacon beacon: beacons) {
-            if (beacon.getDistance() < 1.0) {
-                Log.d(TAG, "I see a beacon that is less than 1 meters away.");
-                // Perform distance-specific action here
-            }
-        }
-    }
+
 
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

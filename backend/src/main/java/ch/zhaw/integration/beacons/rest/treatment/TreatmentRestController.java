@@ -46,13 +46,12 @@ public class TreatmentRestController {
     }
 
     @CrossOrigin
-    @RequestMapping(value =  "/beacons/treatments", method = RequestMethod.POST)
-    public ResponseEntity storeNewTreatments(@RequestBody TreatmentDto treatmentDto){
-        HttpStatus status = treatmentService.storeNewTreatment(treatmentDto);
-        return new ResponseEntity(status);
+    @RequestMapping(value =  "/tracking/treatments", method = RequestMethod.POST)
+    public ResponseEntity<String> storeNewTreatments(@RequestBody TreatmentDto treatmentDto){
+        return treatmentService.storeNewTreatment(treatmentDto);
     }
 
-    @RequestMapping(value =  "/beacons/treatments/list", method = RequestMethod.POST)
+    @RequestMapping(value =  "/tracking/treatments/list", method = RequestMethod.POST)
     public ResponseEntity storeNewTreatmentList(@RequestBody List<TreatmentDto> requestData){
         Doctor doctor;
         try {
@@ -78,13 +77,13 @@ public class TreatmentRestController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/beacons/treatments/all", method = RequestMethod.GET)
+    @RequestMapping(value = "/tracking/treatments/all", method = RequestMethod.GET)
     public ResponseEntity<List<Treatment>> getAllTreatments(){
         List<Treatment> treatmentList = treatmentRepository.findAll();
         return new ResponseEntity<>(treatmentList, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/beacons/treatments/{doctorId}/today", method = RequestMethod.GET)
+    @RequestMapping(value = "/tracking/treatments/{doctorId}/today", method = RequestMethod.GET)
     public ResponseEntity<List<Treatment>> getTodaysTreatmentsForDoctor(@PathVariable String doctorId){
         Optional<Doctor> doctor = doctorRepository.findById(new Long(doctorId));
         if(doctor.isPresent()) {
@@ -96,7 +95,7 @@ public class TreatmentRestController {
         }
     }
 
-    @RequestMapping(value = "/beacons/treatments/{doctorId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/tracking/treatments/{doctorId}", method = RequestMethod.GET)
     public ResponseEntity<List<Treatment>> getAllTreatmentsForDoctor(@PathVariable String doctorId){
         Optional<Doctor> doctor = doctorRepository.findById(new Long(doctorId));
         if(doctor.isPresent()) {
