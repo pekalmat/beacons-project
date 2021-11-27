@@ -9,12 +9,17 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.RemoteException;
 import android.util.Log;
 
+import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+
+import java.util.Collection;
 
 public class TrackingApplication extends Application implements MonitorNotifier {
     private static final String TAG = "TrackingApplication";
@@ -81,8 +86,6 @@ public class TrackingApplication extends Application implements MonitorNotifier 
     public void didEnterRegion(Region region) {
         Log.d(TAG, "did enter region.");
         insideRegion = true;
-        // Send a notification to the user whenever a Beacon
-        // matching a Region (defined above) are first seen.
         Log.d(TAG, "Sending notification.");
         sendNotification();
     }
@@ -95,8 +98,6 @@ public class TrackingApplication extends Application implements MonitorNotifier 
     @Override
     public void didDetermineStateForRegion(int state, Region region) {
     }
-
-
 
     private void sendNotification() {
         NotificationManager notificationManager =
