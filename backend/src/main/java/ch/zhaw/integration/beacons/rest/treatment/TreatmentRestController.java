@@ -1,5 +1,6 @@
 package ch.zhaw.integration.beacons.rest.treatment;
 
+import ch.zhaw.integration.beacons.entities.treatment.TreatmentDto;
 import ch.zhaw.integration.beacons.utils.DateUtils;
 import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import ch.zhaw.integration.beacons.entities.beacon.BeaconRepository;
@@ -31,16 +32,28 @@ public class TreatmentRestController {
     private final TreatmentRepository treatmentRepository;
     private final DoctorRepository doctorRepository;
     private final BeaconRepository beaconRepository;
+    private final TreatmentService treatmentService;
 
-    public TreatmentRestController(TreatmentRepository treatmentRepository, DoctorRepository doctorRepository, BeaconRepository beaconRepository) {
+    public TreatmentRestController(
+            TreatmentService treatmentService,
+            TreatmentRepository treatmentRepository,
+            DoctorRepository doctorRepository,
+            BeaconRepository beaconRepository) {
         this.treatmentRepository = treatmentRepository;
         this.doctorRepository = doctorRepository;
         this.beaconRepository = beaconRepository;
+        this.treatmentService = treatmentService;
     }
 
     @CrossOrigin
-    @RequestMapping(value =  "/beacons/treatments/new", method = RequestMethod.PUT)
-    public ResponseEntity storeNewTreatments(@RequestBody List<TreatmentDto> requestData){
+    @RequestMapping(value =  "/beacons/treatments", method = RequestMethod.POST)
+    public ResponseEntity storeNewTreatments(@RequestBody TreatmentDto treatmentDto){
+        HttpStatus status = treatmentService.storeNewTreatment(treatmentDto);
+        return new ResponseEntity(status);
+    }
+
+    @RequestMapping(value =  "/beacons/treatments/list", method = RequestMethod.POST)
+    public ResponseEntity storeNewTreatmentList(@RequestBody List<TreatmentDto> requestData){
         Doctor doctor;
         try {
             doctor = doctorRepository.getOne(requestData.get(0).getDoctorId());

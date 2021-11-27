@@ -1,5 +1,6 @@
-package ch.zhaw.integration.beacons.rest.treatment;
+package ch.zhaw.integration.beacons.entities.treatment;
 
+import ch.zhaw.integration.beacons.entities.beacon.BeaconDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.Serializable;

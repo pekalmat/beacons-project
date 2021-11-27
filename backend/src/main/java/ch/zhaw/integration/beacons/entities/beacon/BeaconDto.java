@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.rest.treatment;
+package ch.zhaw.integration.beacons.entities.beacon;
 
 import java.io.Serializable;
 
