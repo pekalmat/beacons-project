@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +23,7 @@ import org.altbeacon.beacon.Region;
 
 import java.util.Collection;
 
-public class MainActivity extends AppCompatActivity  implements MonitorNotifier {
+public class MainActivity extends AppCompatActivity  implements MonitorNotifier, RangeNotifier {
     protected static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
@@ -51,6 +52,12 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
         updateText("Beacon visible");
         //becvaon id uslese + aktuelle zeit
         // speichern map/list
+        try {
+            // start ranging for beacons.  This will provide an update once per second with the estimated
+            // distance to the beacon in the didRAngeBeaconsInRegion method.
+            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
+            beaconManager.addRangeNotifier(this);
+        } catch (RemoteException e) {   }
     }
 
     @Override
@@ -66,6 +73,16 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
     @Override
     public void didDetermineStateForRegion(int state, Region region) {
         Log.d(TAG,"didDetermineStateForRegion called with state: " + (state == 1 ? "INSIDE ("+state+")" : "OUTSIDE ("+state+")"));
+    }
+
+    @Override
+    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+        for (Beacon beacon: beacons) {
+            if (beacon.getDistance() < 1.0) {
+                Log.d(TAG, "I see a beacon that is less than 1 meters away.");
+                // Perform distance-specific action here
+            }
+        }
     }
 
     private void requestPermissions() {
@@ -275,5 +292,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier 
         }
 
     }
+
 
 }
