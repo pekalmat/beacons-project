@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
 
 @Entity
@@ -18,9 +19,11 @@ import java.io.Serializable;
 public class Bed implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final String ID_SEQ = "bed_id_seq";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
+    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)

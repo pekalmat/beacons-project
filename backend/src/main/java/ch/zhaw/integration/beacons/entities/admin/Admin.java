@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.entities.person.admin;
+package ch.zhaw.integration.beacons.entities.admin;
 
 import ch.zhaw.integration.beacons.entities.person.Person;
 

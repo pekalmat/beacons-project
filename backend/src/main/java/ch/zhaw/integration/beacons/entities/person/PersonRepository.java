@@ -1,10 +1,11 @@
 package ch.zhaw.integration.beacons.entities.person;
 
-import ch.zhaw.integration.beacons.entities.person.doctor.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
 
 public interface PersonRepository extends JpaRepository<Person, Long> {
 
-    Doctor findByEmail(String email);
+    Optional<Person> findByEmail(String email);
 
 }

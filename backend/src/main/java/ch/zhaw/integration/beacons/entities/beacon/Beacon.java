@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
 
 @Entity
@@ -18,16 +19,18 @@ import java.io.Serializable;
 public class Beacon implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final String ID_SEQ = "beacon_id_seq";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
+    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Bed bed;
 
     @Column(nullable = false)
-    private String uid;
+    private String uuid;
 
     @Column(nullable = false)
     private String minor;
@@ -39,8 +42,8 @@ public class Beacon implements Serializable {
         return id;
     }
 
-    public String getUid() {
-        return uid;
+    public String getUuid() {
+        return uuid;
     }
 
     public Bed getBed() {
@@ -51,8 +54,8 @@ public class Beacon implements Serializable {
         this.bed = bed;
     }
 
-    public void setUid(String uid) {
-        this.uid = uid;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public String getMinor() {

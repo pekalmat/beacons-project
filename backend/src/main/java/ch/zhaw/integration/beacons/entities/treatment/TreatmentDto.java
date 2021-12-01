@@ -1,49 +1,71 @@
 package ch.zhaw.integration.beacons.entities.treatment;
 
 import ch.zhaw.integration.beacons.entities.beacon.BeaconDto;
+import ch.zhaw.integration.beacons.entities.doctor.DoctorDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class TreatmentDto implements Serializable {
+public class TreatmentDto extends RepresentationModel<TreatmentDto> implements Serializable {
 
-    private Long doctorId;
+    private Long id;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date treatmentStart;
+    private Date startTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date treatmentEnd;
-    private BeaconDto beaconDto;
+    private Date endTime;
+    private String comment;
 
-    public Long getDoctorId() {
-        return doctorId;
+    // Input Only
+    private DoctorDto doctor;
+    private BeaconDto beacon;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Date getTreatmentStart() {
-        return treatmentStart;
+    public Date getStartTime() {
+        return startTime;
     }
 
-    public void setTreatmentStart(Date treatmentStart) {
-        this.treatmentStart = treatmentStart;
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
     }
 
-    public Date getTreatmentEnd() {
-        return treatmentEnd;
+    public Date getEndTime() {
+        return endTime;
     }
 
-    public void setTreatmentEnd(Date treatmentEnd) {
-        this.treatmentEnd = treatmentEnd;
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
-    public BeaconDto getBeaconDto() {
-        return beaconDto;
+    public String getComment() {
+        return comment;
     }
 
-    public void setBeaconDto(BeaconDto beaconDto) {
-        this.beaconDto = beaconDto;
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public DoctorDto getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(DoctorDto doctor) {
+        this.doctor = doctor;
+    }
+
+    public BeaconDto getBeacon() {
+        return beacon;
+    }
+
+    public void setBeacon(BeaconDto beacon) {
+        this.beacon = beacon;
     }
 }

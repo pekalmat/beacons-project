@@ -1,7 +1,7 @@
 package ch.zhaw.integration.beacons.entities.treatment;
 
 import ch.zhaw.integration.beacons.entities.patient.Patient;
-import ch.zhaw.integration.beacons.entities.person.doctor.Doctor;
+import ch.zhaw.integration.beacons.entities.doctor.Doctor;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -12,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -20,9 +21,11 @@ import java.util.Date;
 public class Treatment implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final String ID_SEQ = "treatment_id_seq";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
+    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

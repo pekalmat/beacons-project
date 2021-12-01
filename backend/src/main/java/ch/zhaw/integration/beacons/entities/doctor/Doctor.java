@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.entities.person.doctor;
+package ch.zhaw.integration.beacons.entities.doctor;
 
 import ch.zhaw.integration.beacons.entities.person.Person;
 import ch.zhaw.integration.beacons.entities.treatment.Treatment;

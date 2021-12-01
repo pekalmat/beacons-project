@@ -1,4 +1,5 @@
-package ch.zhaw.integration.beacons.entities.person.admin;
+package ch.zhaw.integration.beacons.entities.admin;
+
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -13,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -22,9 +23,11 @@ import java.util.List;
 public class Patient implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final String ID_SEQ = "patient_id_seq";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
+    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
     private Long id;
 
     @NotNull

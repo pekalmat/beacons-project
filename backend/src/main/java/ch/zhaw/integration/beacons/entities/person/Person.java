@@ -2,6 +2,8 @@ package ch.zhaw.integration.beacons.entities.person;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -10,19 +12,23 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Collection;
 
 @Entity
 @DiscriminatorValue("user")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Person implements Serializable {
+public class Person implements Serializable, UserDetails {
 
     private static final long serialVersionUID = 1L;
+    private static final String ID_SEQ = "person_id_seq";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
+    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
     private Long id;
 
     @NotNull
@@ -36,9 +42,6 @@ public class Person implements Serializable {
 
     @NotNull
     private String password;
-
-    @NotNull
-    private String userSalt;
 
     public Long getId() {
         return id;
@@ -76,11 +79,33 @@ public class Person implements Serializable {
         this.password = password;
     }
 
-    public String getUserSalt() {
-        return userSalt;
+    @Override
+    public String getUsername() {
+        return email;
     }
 
-    public void setUserSalt(String userSalt) {
-        this.userSalt = userSalt;
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
     }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
+
 }
