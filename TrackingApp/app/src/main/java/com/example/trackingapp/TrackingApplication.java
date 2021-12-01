@@ -9,17 +9,13 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.RemoteException;
 import android.util.Log;
 
-import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
-import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 
-import java.util.Collection;
 
 public class TrackingApplication extends Application implements MonitorNotifier {
     private static final String TAG = "TrackingApplication";
@@ -32,7 +28,7 @@ public class TrackingApplication extends Application implements MonitorNotifier 
 
         BeaconManager beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
 
-        // By default Ithe AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
+        // By default the AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
         // find a different type of beacon, you must specify the byte layout for that beacon's
         // advertisement with a line like below.  The example shows how to find a beacon with the
         // same byte layout as AltBeacon but with a beaconTypeCode of 0xaabb.  To find the proper

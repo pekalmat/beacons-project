@@ -4,25 +4,22 @@ import java.io.Serializable;
 
 public class BeaconDto implements Serializable {
 
-    private String beaconUid;
+    private String uuid;
     private String major;
     private String minor;
 
-    public BeaconDto(){
-    }
-
-    public BeaconDto(String beaconUid, String major, String minor) {
-        this.beaconUid = beaconUid;
+    public BeaconDto(String uuid, String major, String minor) {
+        this.uuid = uuid;
         this.major = major;
         this.minor = minor;
     }
 
-    public String getBeaconUid() {
-        return beaconUid;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setBeaconUid(String beaconUid) {
-        this.beaconUid = beaconUid;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public String getMajor() {
