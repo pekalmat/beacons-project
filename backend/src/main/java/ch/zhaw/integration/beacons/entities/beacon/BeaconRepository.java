@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BeaconRepository extends JpaRepository<Beacon, Long> {
 
-    Beacon findBeaconByUuidAndMajorAndMinor(String uid, String major, String minor);
+    Beacon findBeaconByUuidAndMajorAndMinor(String uuid, String major, String minor);
 }
