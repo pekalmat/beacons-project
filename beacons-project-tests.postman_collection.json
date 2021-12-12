@@ -1,0 +1,293 @@
+{
+	"info": {
+		"_postman_id": "a3a2ab06-274b-4a91-b237-f9cf4de4b896",
+		"name": "beacons-project-tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "public/admins/signup",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\": \"admin\",\r\n    \"surname\": \"admin\",\r\n    \"email\": \"admin@example.com\",\r\n    \"password\": \"admin\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/public/admins/signup",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"public",
+						"admins",
+						"signup"
+					]
+				},
+				"description": "signup/create new admin test"
+			},
+			"response": []
+		},
+		{
+			"name": "public/admins/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"admin@example.com\",\r\n    \"password\": \"admin\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/public/admins/login",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"public",
+						"admins",
+						"login"
+					]
+				},
+				"description": "admin login test"
+			},
+			"response": []
+		},
+		{
+			"name": "public/doctors/signup",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\": \"Hans\",\r\n    \"surname\": \"Peter\",\r\n    \"email\": \"doctor1@example.com\",\r\n    \"password\": \"doctor1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/public/doctors/signup",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"public",
+						"doctors",
+						"signup"
+					]
+				},
+				"description": "signup / create new doctor test"
+			},
+			"response": []
+		},
+		{
+			"name": "public/doctors/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"doctor1@example.com\",\r\n    \"password\": \"doctor1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/public/doctors/login",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"public",
+						"doctors",
+						"login"
+					]
+				},
+				"description": "test login doctor"
+			},
+			"response": []
+		},
+		{
+			"name": "internal/beacons",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkb2N0b3IxQGV4YW1wbGUuY29tIiwic2NvcGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX0FETUlOIn1dLCJpc3MiOiJodHRwczovL2JlYWNvbnMtcHJvamVjdC5jb20iLCJpYXQiOjE2MzgzODc3NTUsImV4cCI6MTYzODM4ODY1NX0.9LoijTAZcDbr43pNNBkcAAr9g0P_KeM41_Nli-e6MxU",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/internal/beacons",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"internal",
+						"beacons"
+					]
+				},
+				"description": "get all beacons test"
+			},
+			"response": []
+		},
+		{
+			"name": "internal/treatments",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkb2N0b3IxQGV4YW1wbGUuY29tIiwic2NvcGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX0FETUlOIn1dLCJpc3MiOiJodHRwczovL2JlYWNvbnMtcHJvamVjdC5jb20iLCJpYXQiOjE2MzgzODc3NTUsImV4cCI6MTYzODM4ODY1NX0.9LoijTAZcDbr43pNNBkcAAr9g0P_KeM41_Nli-e6MxU",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"startTime\": \"2021-12-01 20:45:00\",\r\n        \"endTime\": \"2021-12-01 21:45:00\",\r\n        \"doctor\": {\r\n            \"id\": \"2\"\r\n        },\r\n        \"beacon\": {\r\n            \"uuid\": \"01122334-4556-6778-899a-abbccddeeff0\",\r\n            \"major\": \"10002\",\r\n            \"minor\": \"9571\"\r\n        }\r\n    },\r\n    {\r\n        \"startTime\": \"2021-12-02 20:45:00\",\r\n        \"endTime\": \"2021-12-02 21:45:00\",\r\n        \"doctor\": {\r\n            \"id\": \"2\"\r\n        },\r\n        \"beacon\": {\r\n            \"uuid\": \"01122334-4556-6778-899a-abbccddeeff0\",\r\n            \"major\": \"10002\",\r\n            \"minor\": \"9571\"\r\n        }\r\n    }\r\n\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/internal/treatments/list",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"internal",
+						"treatments",
+						"list"
+					]
+				},
+				"description": "test storeNewTreatment"
+			},
+			"response": []
+		},
+		{
+			"name": "internal/treatments/2/today",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkb2N0b3IxQGV4YW1wbGUuY29tIiwic2NvcGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX0FETUlOIn1dLCJpc3MiOiJodHRwczovL2JlYWNvbnMtcHJvamVjdC5jb20iLCJpYXQiOjE2MzgzODc3NTUsImV4cCI6MTYzODM4ODY1NX0.9LoijTAZcDbr43pNNBkcAAr9g0P_KeM41_Nli-e6MxU",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/internal/treatments/2/today",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"internal",
+						"treatments",
+						"2",
+						"today"
+					]
+				},
+				"description": "test get treatments for doctor as of today"
+			},
+			"response": []
+		},
+		{
+			"name": "internal/treatments",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkb2N0b3IxQGV4YW1wbGUuY29tIiwic2NvcGVzIjpbeyJhdXRob3JpdHkiOiJST0xFX0FETUlOIn1dLCJpc3MiOiJodHRwczovL2JlYWNvbnMtcHJvamVjdC5jb20iLCJpYXQiOjE2MzgzODc3NTUsImV4cCI6MTYzODM4ODY1NX0.9LoijTAZcDbr43pNNBkcAAr9g0P_KeM41_Nli-e6MxU",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://192.168.1.188:8081/beacons/api/internal/treatments",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"188"
+					],
+					"port": "8081",
+					"path": [
+						"beacons",
+						"api",
+						"internal",
+						"treatments"
+					]
+				},
+				"description": "test get all treatments"
+			},
+			"response": []
+		}
+	]
+}
