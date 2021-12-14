@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         return new JSONObject();
     }
 
+    // Request the location-permissions if not already granted
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -227,6 +228,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
     }
 
+    // Check Bluetooth functionalities
     private void verifyBluetooth() {
         try {
             if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
@@ -250,6 +252,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
 
     }
 
+    // Log the Beacon Details to the Screen when Ranging
     private void logToDisplay(String line) {
         runOnUiThread(() -> {
             TextView editText = (TextView) MainActivity.this.findViewById(R.id.rangingText);
@@ -257,6 +260,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         });
     }
 
+    // Update the visibility text
     private void updateText(String line) {
         runOnUiThread(() -> {
             TextView editText = (TextView) MainActivity.this.findViewById(R.id.monitoringText);
@@ -352,7 +356,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
     }
 
-    @Override // Monitor Notifier
+    @Override // Called when at least one beacon in a Region is visible from Monitor Notifier
     public void didEnterRegion(Region region) {
         updateText("Beacon visible");
         try {
@@ -365,12 +369,12 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
     }
 
-    @Override // MonitorNotifier
+    @Override // Called when no beacons in a Region are visible from MonitorNotifier
     public void didExitRegion(Region region) {
         updateText("Beacon not visible");
     }
 
-    @Override // Monitor Notifier
+    @Override // Called with a state value when at least one or no beacons in a Region are visible from Monitor Notifier
     public void didDetermineStateForRegion(int state, Region region) {
     }
 

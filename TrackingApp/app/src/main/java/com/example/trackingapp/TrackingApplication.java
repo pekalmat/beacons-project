@@ -77,53 +77,20 @@ public class TrackingApplication extends Application implements MonitorNotifier 
 
     }
 
-
-    @Override
+    @Override // Called when at least one beacon in a Region is visible from Monitor Notifier
     public void didEnterRegion(Region region) {
         Log.d(TAG, "did enter region.");
         insideRegion = true;
         Log.d(TAG, "Sending notification.");
-        sendNotification();
     }
 
-    @Override
+    @Override // Called when no beacons in a Region are visible from MonitorNotifier
     public void didExitRegion(Region region) {
         insideRegion = false;
     }
 
-    @Override
+    @Override // Called with a state value when at least one or no beacons in a Region are visible from Monitor Notifier
     public void didDetermineStateForRegion(int state, Region region) {
     }
 
-    private void sendNotification() {
-        NotificationManager notificationManager =
-                (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("Tracking App Notifications",
-                    "Tracking App Notifications", NotificationManager.IMPORTANCE_HIGH);
-            channel.enableLights(true);
-            channel.enableVibration(true);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-            notificationManager.createNotificationChannel(channel);
-            builder = new Notification.Builder(this, channel.getId());
-        }
-        else {
-            builder = new Notification.Builder(this);
-            builder.setPriority(Notification.PRIORITY_HIGH);
-        }
-
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addNextIntent(new Intent(this, MainActivity.class));
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-        builder.setContentTitle("I detect a beacon");
-        builder.setContentText("Tap here to see details in the tracking app");
-        builder.setContentIntent(resultPendingIntent);
-        notificationManager.notify(1, builder.build());
-    }
 }
