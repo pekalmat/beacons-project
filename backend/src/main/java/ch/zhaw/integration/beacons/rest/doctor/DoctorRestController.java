@@ -31,7 +31,7 @@ public class DoctorRestController implements ApiRestController {
     @RequestMapping(value = PUBLIC_DOCTORS_PATH + "/login", method = RequestMethod.POST, consumes="application/json")
     public ResponseEntity<DoctorDto> loginUser(@RequestBody DoctorDto doctorDto){
         DoctorDto responseDto = doctorService.authenticateLogin(doctorDto);
-        LOGGER.debug("User: " + doctorDto.getEmail() + " Response: " + HttpStatus.OK);
+        LOGGER.info("loginUser-Api requested - POST " + PUBLIC_DOCTORS_PATH + "/login" + " User: " + doctorDto.getEmail() + " Response: " + HttpStatus.OK);
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, jwtTokenUtil.generateToken(doctorDto.getEmail()))
                 .body(responseDto);

@@ -5,10 +5,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 
 import org.altbeacon.beacon.BeaconManager;
@@ -18,7 +16,7 @@ import org.altbeacon.beacon.Region;
 
 
 public class TrackingApplication extends Application implements MonitorNotifier {
-    private static final String TAG = "TrackingApplication";
+    private static final String TAG = "########## TrackingApplication ##########";
     public static final Region beaconRegion = new Region("beaconRegion", null, null, null);
     public static boolean insideRegion = false;
 
@@ -46,15 +44,13 @@ public class TrackingApplication extends Application implements MonitorNotifier 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("My Notification Channel ID",
-                    "My Notification Name", NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("My Notification Channel Description");
-            NotificationManager notificationManager = (NotificationManager) getSystemService(
-                    Context.NOTIFICATION_SERVICE);
-            notificationManager.createNotificationChannel(channel);
-            builder.setChannelId(channel.getId());
-        }
+        NotificationChannel channel = new NotificationChannel("My Notification Channel ID",
+                "My Notification Name", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("My Notification Channel Description");
+        NotificationManager notificationManager = (NotificationManager) getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(channel);
+        builder.setChannelId(channel.getId());
 
 
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);

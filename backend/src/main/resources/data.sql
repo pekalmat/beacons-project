@@ -13,7 +13,7 @@ UPDATE public.bed  SET patient_id = 1 WHERE id=1;
 INSERT INTO public.beacon(id, major, minor, uuid) VALUES (2, '10002', '9586', '01122334-4556-6778-899a-abbccddeeff0');
 INSERT INTO public.bed(id, beacon_id) VALUES (2, 2);
 UPDATE public.beacon  SET bed_id = 2 WHERE id=2;
-INSERT INTO public.patient(id, ahv_nr, first_name, surname, bed_id) VALUES (2, '1234-5132-521', 'Hans', 'Peter', 1);
+INSERT INTO public.patient(id, ahv_nr, first_name, surname, bed_id) VALUES (2, '1234-5132-521', 'Hans', 'Peter', 2);
 UPDATE public.bed  SET patient_id = 2 WHERE id=2;
 
 

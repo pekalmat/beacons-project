@@ -8,6 +8,8 @@ import ch.zhaw.integration.beacons.entities.person.PersonRepository;
 import ch.zhaw.integration.beacons.error.exception.EmailInUseException;
 import ch.zhaw.integration.beacons.security.SecurityHelper;
 import org.mapstruct.factory.Mappers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
