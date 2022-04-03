@@ -6,8 +6,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,10 +22,10 @@ import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
@@ -29,26 +34,29 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity  implements MonitorNotifier, RangeNotifier {
-    protected static final String TAG =  "########## MainActivity ##########";
+
+    // Logger-TAG
+    private static final String TAG =  "########## MainActivity ##########";
+    // Permissions
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
-    private final BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
-
+    // REST-API
     private static final String HOST = "http://192.168.1.188:8081";
     private static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
     private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/doctors/login";
-
-    private boolean currentlyRanging = false;
     private String sessionBearerToken;
     private RequestQueue requestQueue;
-
+    // RANGING-STATUS ON/OFF
+    private boolean currentlyRanging = false;
+    // Beacon-Manager / Scanner
+    private BeaconManager beaconManager;
+    private static boolean insideRegion = false;
+    public static final Region beaconRegion = new Region("beaconRegion", null, null, null);
     //
     // APPLICATION_START_UP
     //
@@ -62,14 +70,62 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         requestQueue = Volley.newRequestQueue(this);
         // Mock a Login because of authorization check for data fetching/manipulation apis
         mockLoginToGetBearerToken();
-        BeaconManager.getInstanceForApplication(this).addMonitorNotifier(this);
-        if (TrackingApplication.insideRegion) {
+        // Setup beaconManager
+        setUpBeaconManager();
+        beaconManager.addMonitorNotifier(this);
+        if (insideRegion) {
             updateText("Beacons are visible.");
         }
         else {
             updateText("No beacons are visible.");
         }
     }
+
+    private void setUpBeaconManager() {
+        beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
+
+        // By default the AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
+        // find a different type of beacon, you must specify the byte layout for that beacon's
+        // advertisement with a line like below.  The example shows how to find a beacon with the
+        // same byte layout as AltBeacon but with a beaconTypeCode of 0xaabb.  To find the proper
+        // layout expression for other beacon types, do a web search for "setBeaconLayout"
+        // including the quotes.
+        //cut out (,d:25-25)
+        beaconManager.getBeaconParsers().clear();
+        //iBeacon Layout = ("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24")));
+
+        BeaconManager.setDebug(false);
+
+        Notification.Builder builder = new Notification.Builder(this);
+        builder.setContentTitle("Scanning for Beacons");
+        Intent intent = new Intent(this, MainActivity.class);
+        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+        NotificationChannel channel = new NotificationChannel("My Notification Channel ID", "My Notification Name", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("My Notification Channel Description");
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(channel);
+        builder.setChannelId(channel.getId());
+
+        beaconManager.enableForegroundServiceScanning(builder.build(), 456);
+        beaconManager.setEnableScheduledScanJobs(false);
+        beaconManager.setBackgroundBetweenScanPeriod(0);
+        beaconManager.setBackgroundScanPeriod(100);
+
+        Log.d(TAG, "setting up background monitoring in app onCreate");
+        /*beaconManager.addMonitorNotifier(this);*/
+
+        // If we were monitoring *different* regions on the last run of this app, they will be
+        // remembered.  In this case we need to disable them here
+        for (Region region: beaconManager.getMonitoredRegions()) {
+            beaconManager.stopMonitoring(region);
+        }
+
+        Log.d(TAG, "Started Monitoring");
+        beaconManager.startMonitoring(beaconRegion);
+    }
+
     // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
     private void mockLoginToGetBearerToken() {
         try {
@@ -143,7 +199,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     }
 
     private void createAndSendPostRequest(JSONArray postRequestBody) {
-        //(jsonString.toString());
         // Create and POST Json-PostRequest
         CustomJsonArrayRequest postNewTreatmentListRequest = new CustomJsonArrayRequest(
                 Request.Method.POST,
@@ -161,68 +216,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     }
     //
     //
-    //  OLD-TRACKING-Helper MAIN-LOGIC-HELPER-METHODS
-    //
-    // Sends Post Request for Tracking Data Transmission
-    /*private void sendNewTreatmentPostRequest() {
-        // Create request JsonBody
-        JSONObject jsonBody = createPostRequestBody();
-        // Create Json-PostRequest
-        CustomJsonObjectRequest postNewTreatmentRequest = new CustomJsonObjectRequest(
-                Request.Method.POST,
-                POST_NEW_TREATMENT_REQUEST_URL,
-                sessionBearerToken,
-                jsonBody,
-                response -> {
-                    // TODO: get new token and update session token
-                    Log.i(TAG, "PostRequestResponse is: " + response.toString());
-                },
-                error -> Log.e(TAG, "PostRequestError: " + error.getMessage())
-        );
-        Log.i(TAG, "Send Tracking Data to server: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-        requestQueue.add(postNewTreatmentRequest);
-    }*/
-    //
-    // Create Request body for Tracking Data Transmission
-    /*private JSONObject createPostRequestBody() {
-        try {
-            @SuppressLint("SimpleDateFormat") String startTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'").format(currentTrackingStartTime);
-            Date endTime = java.util.Calendar.getInstance().getTime();
-            @SuppressLint("SimpleDateFormat") String endTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'").format(endTime);
-            Gson gson = new Gson();
-            String beaconJson = gson.toJson(currentlyTrackedBeacon);
-            JSONObject doctorJson = new JSONObject();
-            doctorJson.put("id", 2);
-            return new JSONObject(
-                    "{" +
-                            "\"startTime\":\"" + startTimeString + "\"," +
-                            "\"endTime\":\"" + endTimeString + "\"," +
-                            "\"doctor\":" + doctorJson.toString() + "," +
-                            "\"beacon\":" + beaconJson +
-                            "}");
-        } catch (JSONException e) {
-            Log.e(TAG,"Error Creating RequestBody");
-            e.printStackTrace();
-        }
-        return new JSONObject();
-    }*/
-    // Compare beacons -> used in Tracking logic
-    /*private boolean beaconMatchesBeaconDto(Beacon beacon, BeaconDto beaconDto) {
-        return beaconDto.getUuid().equals(beacon.getId1().toString())
-                && beaconDto.getMajor().equals(beacon.getId2().toString())
-                && beaconDto.getMinor().equals(beacon.getId3().toString());
-    }*/
-    // Check if beacon is registered -> used in Tracking logic
-    /*private boolean beaconIsRegisteredInSystem(Beacon beacon) {
-        for (BeaconDto beaconDto : knownBeaconsToTrack) {
-            if (beaconMatchesBeaconDto(beacon, beaconDto)) {
-                return true;
-            }
-        }
-        return false;
-    }*/
-    //
-    //
     //
     // SCANNING / MONITORING START METHODS
     //
@@ -238,10 +231,10 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                 }
             };
             beaconManager.addRangeNotifier(rangeNotifier);
-            beaconManager.startRangingBeacons(TrackingApplication.beaconRegion);
+            beaconManager.startRangingBeacons(beaconRegion);
             currentlyRanging = true;
         } else{
-            beaconManager.stopRangingBeacons(TrackingApplication.beaconRegion);
+            beaconManager.stopRangingBeacons(beaconRegion);
             beaconManager.removeAllRangeNotifiers();
             currentlyRanging = false;
         }
@@ -254,13 +247,13 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         Button button = (Button) findViewById(R.id.scanButton);
 
         if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
-            BeaconManager.getInstanceForApplication(this).stopMonitoring(TrackingApplication.beaconRegion);
+            BeaconManager.getInstanceForApplication(this).stopMonitoring(beaconRegion);
             button.setText("Enable Monitoring");
             updateText("Monitoring deactivated");
         }
         else {
             updateText("Beacon not visible");
-            BeaconManager.getInstanceForApplication(this).startMonitoring(TrackingApplication.beaconRegion);
+            BeaconManager.getInstanceForApplication(this).startMonitoring(beaconRegion);
             button.setText("Disable Monitoring");
         }
 
@@ -268,6 +261,9 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // Called when at least one beacon in a Region is visible from Monitor Notifier
     @Override
     public void didEnterRegion(Region region) {
+        Log.i(TAG, "did enter region.");
+        insideRegion = true;
+
         updateText("Beacon visible");
         // start ranging for beacons.  This will provide an update once per second with the estimated
         // distance to the beacon in the didRAngeBeaconsInRegion method.
@@ -277,11 +273,13 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     //
     //
     //
-    // NOT NEEDED CODE Overrides
+    // NOT USED CODE Overrides
     //
     // Called when no beacons in a Region are visible from MonitorNotifier
     @Override
     public void didExitRegion(Region region) {
+        Log.i(TAG, "did exit region.");
+        insideRegion = false;
         updateText("Beacon not visible");
     }
     // Called with a state value when at least one or no beacons in a Region are visible from Monitor Notifier
@@ -320,8 +318,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     builder.setTitle("Functionality limited");
                     builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons when in the background.");
                     builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(dialog -> {
-                    });
+                    builder.setOnDismissListener(dialog -> { });
                     builder.show();
                 }
             }
@@ -329,47 +326,37 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     }
     // Request the location-permissions if not already granted
     private void requestPermissions() {
-        if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("This app needs background location access");
-                        builder.setMessage("Please grant location access so this app can detect beacons in the background.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(dialog -> requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                                PERMISSION_REQUEST_BACKGROUND_LOCATION));
-                        builder.show();
-                    }
-                    else {
-                        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                        builder.setTitle("Functionality limited");
-                        builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons in the background.  Please go to Settings -> Applications -> Permissions and grant background location access to this app.");
-                        builder.setPositiveButton(android.R.string.ok, null);
-                        builder.setOnDismissListener(dialog -> {
-                        });
-                        builder.show();
-                    }
+        if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("This app needs background location access");
+                    builder.setMessage("Please grant location access so this app can detect beacons in the background.");
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(dialog -> requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, PERMISSION_REQUEST_BACKGROUND_LOCATION));
+                    builder.show();
+                }
+                else {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Functionality limited");
+                    builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons in the background.  Please go to Settings -> Applications -> Permissions and grant background location access to this app.");
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(dialog -> { });
+                    builder.show();
                 }
             }
         } else {
             if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                        PERMISSION_REQUEST_FINE_LOCATION);
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION}, PERMISSION_REQUEST_FINE_LOCATION);
             }
             else {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Functionality limited");
                 builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons.  Please go to Settings -> Applications -> Permissions and grant location access to this app.");
                 builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(dialog -> {
-                });
+                builder.setOnDismissListener(dialog -> { });
                 builder.show();
             }
-
         }
     }
     // Check Bluetooth functionalities
@@ -383,8 +370,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                 builder.setOnDismissListener(dialog -> finishAffinity());
                 builder.show();
             }
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Bluetooth LE not available");
             builder.setMessage("Sorry, this device does not support Bluetooth LE.");
