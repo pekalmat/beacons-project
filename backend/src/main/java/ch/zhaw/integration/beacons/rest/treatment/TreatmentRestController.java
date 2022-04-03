@@ -30,9 +30,8 @@ public class TreatmentRestController implements ApiRestController {
     @RequestMapping(value =  INTERNAL_TREATMENTS_PATH, method = RequestMethod.POST, consumes = "application/json")
     public ResponseEntity<TreatmentDto> storeNewTreatment(@RequestBody TreatmentDto treatmentDto) throws BadRequestException {
         TreatmentDto newTreatmentDto = treatmentService.storeNewTreatment(treatmentDto);
-        LOGGER.debug("Persisted new Treatment: ID: " + treatmentDto.getId());
+        LOGGER.info("storeNewTreatment-Api requested - POST " + INTERNAL_TREATMENTS_PATH + " , ResponseStatus: " + HttpStatus.OK);
         return new ResponseEntity<>(newTreatmentDto, HttpStatus.OK);
-
     }
 
     @RequestMapping(value =  INTERNAL_TREATMENTS_PATH + "/list", method = RequestMethod.POST, consumes = "application/json")
