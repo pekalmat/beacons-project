@@ -112,7 +112,6 @@
             Changes after Initial Setup
         ________________________________________________________________________________
         -->
-
     <changeSet author="Mateusz Pekalski" id="03.04.2022-1">
         <comment>Adding Signal Table representing recognised beacon-signals</comment>
         <createSequence sequenceName="signal_id_seq" incrementBy="1" />
@@ -134,6 +133,18 @@
             <column name="running_average_rssi" type="DOUBLE"/>
             <column name="distance" type="DOUBLE"/>
         </createTable>
+    </changeSet>
+    
+    <changeSet author="Mateusz Pekalski" id="03.04.2022-2">
+        <comment>Changing Structure of Table Beacon</comment>
+        <addColumn tableName="beacon">
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="geopos" type="VARCHAR(255)"/>
+            <column name="register_source" type="VARCHAR(255)"/>
+            <column name="standort" type="VARCHAR(255)"/>
+            <column name="geoposition" type="VARCHAR(255)"/>
+            <column name="floor" type="VARCHAR(255)"/>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>

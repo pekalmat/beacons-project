@@ -23,7 +23,7 @@ public class Beacon implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
-    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
+    @SequenceGenerator(name = ID_SEQ, sequenceName = ID_SEQ, allocationSize = 1)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -37,6 +37,13 @@ public class Beacon implements Serializable {
 
     @Column(nullable = false)
     private String major;
+
+    private String name;
+    private String geopos;
+    private String registerSource;
+    private String standort;
+    private String geoposition;
+    private String floor;
 
     public Long getId() {
         return id;
@@ -72,5 +79,53 @@ public class Beacon implements Serializable {
 
     public void setMajor(String major) {
         this.major = major;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getRegisterSource() {
+        return registerSource;
+    }
+
+    public void setRegisterSource(String registerSource) {
+        this.registerSource = registerSource;
+    }
+
+    public String getGeopos() {
+        return geopos;
+    }
+
+    public void setGeopos(String geopos) {
+        this.geopos = geopos;
+    }
+
+    public String getStandort() {
+        return standort;
+    }
+
+    public void setStandort(String standort) {
+        this.standort = standort;
+    }
+
+    public String getGeoposition() {
+        return geoposition;
+    }
+
+    public void setGeoposition(String geoposition) {
+        this.geoposition = geoposition;
+    }
+
+    public String getFloor() {
+        return floor;
+    }
+
+    public void setFloor(String floor) {
+        this.floor = floor;
     }
 }

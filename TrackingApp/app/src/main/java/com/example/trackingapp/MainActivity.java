@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
     private void mockLoginToGetBearerToken() {
         try {
-            JSONObject jsonBody = new JSONObject("{" + "\"email\":\"doctor1@example.com\"," + "\"password\":\"doctor1\"" + "}");
+            JSONObject jsonBody = new JSONObject("{" + "\"email\":\"admin@example.com\"," + "\"password\":\"admin\"" + "}");
             CustomJsonObjectRequest mockLoginRequest = new CustomJsonObjectRequest(
                     Request.Method.POST,
                     MOCK_LOGIN_REQUEST_URL,
