@@ -104,20 +104,22 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // Range Notifier -> Main Beacon-Tracking logic
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-        try {
-            JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
-            createAndSendPostRequest(signalsJsonArray);
-        } catch (JSONException e) {
-            Log.e(TAG,"Error Creating RequestBody");
-            e.printStackTrace();
+        Log.e(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
+        if(beacons.size() != 0) {
+            try {
+                JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
+                createAndSendPostRequest(signalsJsonArray);
+            } catch (JSONException e) {
+                Log.e(TAG, "Error Creating RequestBody");
+                e.printStackTrace();
+            }
         }
     }
     //
     // MAIN CODE HELPER-METHODS
     private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
-        Log.e(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
         Date timestamp = Calendar.getInstance().getTime();
-        @SuppressLint("SimpleDateFormat") String timestampString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'").format(timestamp);
+        @SuppressLint("SimpleDateFormat") String timestampString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'").format(timestamp);
         JSONArray result = new JSONArray();
         for (Beacon beacon: beacons) {
             // Collect all Beacon Signals and create JsonString for Each

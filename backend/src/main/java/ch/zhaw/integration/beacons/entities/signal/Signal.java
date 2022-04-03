@@ -20,7 +20,7 @@ public class Signal implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
-    @SequenceGenerator(name=ID_SEQ,  allocationSize = 100)
+    @SequenceGenerator(name = ID_SEQ, sequenceName = ID_SEQ, allocationSize = 1)
     private Long id;
     private Date signalTimestamp;
     private String uuid;

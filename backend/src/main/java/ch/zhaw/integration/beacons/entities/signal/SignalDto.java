@@ -8,7 +8,7 @@ import java.util.Date;
 
 public class SignalDto extends RepresentationModel<SignalDto> implements Serializable {
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Date signalTimestamp;
     private String uuid;
     private String major;

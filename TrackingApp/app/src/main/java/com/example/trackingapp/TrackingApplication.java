@@ -57,7 +57,7 @@ public class TrackingApplication extends Application implements MonitorNotifier 
 
         beaconManager.setEnableScheduledScanJobs(false);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setBackgroundScanPeriod(1100);
+        beaconManager.setBackgroundScanPeriod(100);
 
         Log.d(TAG, "setting up background monitoring in app onCreate");
         /*beaconManager.addMonitorNotifier(this);*/
