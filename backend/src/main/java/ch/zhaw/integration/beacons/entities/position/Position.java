@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -33,7 +34,7 @@ public class Position implements Serializable {
     private Integer estimatedFloor;
     private double xCoordinate;
     private double yCoordinate;
-
+    private Date positionTimestamp;
 
     public Long getId() {
         return id;
@@ -83,4 +84,11 @@ public class Position implements Serializable {
         this.yCoordinate = yCoordinate;
     }
 
+    public Date getPositionTimestamp() {
+        return positionTimestamp;
+    }
+
+    public void setPositionTimestamp(Date positionTimestamp) {
+        this.positionTimestamp = positionTimestamp;
+    }
 }

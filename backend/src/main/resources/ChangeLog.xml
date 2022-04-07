@@ -129,8 +129,7 @@
             <column name="estimated_floor" type="INT"/>
             <column name="x_coordinate" type="DOUBLE PRECISION"/>
             <column name="y_coordinate" type="DOUBLE PRECISION"/>
-            <column name="x_coordinate_based_on_library_distance" type="DOUBLE PRECISION"/>
-            <column name="y_coordinate_based_on_library_distance" type="DOUBLE PRECISION"/>
+            <column name="position_timestamp" type="TIMESTAMP WITH TIME ZONE"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="position_pkey" tableName="position"/>
         <addForeignKeyConstraint baseColumnNames="route_id" baseTableName="position" constraintName="route_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="route"/>

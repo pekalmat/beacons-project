@@ -1,13 +1,16 @@
 package ch.zhaw.integration.beacons.rest.route.trilateration.calculator;
 
 import ch.zhaw.integration.beacons.entities.position.Position;
+import ch.zhaw.integration.beacons.entities.route.Route;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -18,7 +21,7 @@ public abstract class AbstractPositionCalculator {
     abstract double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition);
     abstract double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition);
 
-    List<Position> calculatePositions(List<ImmutableTriple<Signal, Signal, Signal>> positionSignals) {
+    List<Position> calculatePositions(List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
         List<Position> positions = new ArrayList<>();
         for (ImmutableTriple<Signal, Signal, Signal> position : positionSignals) {
             Position calculatedPosition = new Position();
@@ -35,10 +38,22 @@ public abstract class AbstractPositionCalculator {
             Pair<Double, Double> coordinates = trilateratePositionCoordinates(location1, location2, location3, distance1, distance2, distance3);
             calculatedPosition.setxCoordinate(coordinates.getFirst());
             calculatedPosition.setyCoordinate(coordinates.getSecond());
+            calculatedPosition.setPositionTimestamp(getSignalTimestampMeanForPositionTimestamp(position));
+            calculatedPosition.setRoute(route);
 
             positions.add(calculatedPosition);
         }
         return positions;
+    }
+
+    private Date getSignalTimestampMeanForPositionTimestamp(ImmutableTriple<Signal, Signal, Signal> position) {
+        BigInteger total = BigInteger.ZERO;
+        List<Date> signalDates = List.of(position.getLeft().getSignalTimestamp(), position.getMiddle().getSignalTimestamp(), position.getRight().getSignalTimestamp());
+        for (Date date : signalDates) {
+            total = total.add(BigInteger.valueOf(date.getTime()));
+        }
+        BigInteger averageMillis = total.divide(BigInteger.valueOf(signalDates.size()));
+        return new Date(averageMillis.longValue());
     }
 
     private Pair<Double, Double> trilateratePositionCoordinates(

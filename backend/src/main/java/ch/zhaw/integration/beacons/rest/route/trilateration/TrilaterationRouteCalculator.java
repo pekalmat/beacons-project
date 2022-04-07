@@ -41,15 +41,14 @@ public class TrilaterationRouteCalculator {
     }
 
     private Route calculateRoute(CalculationMethod calculationMethod, Device device, Date triggerTime, List<ImmutableTriple<Signal, Signal, Signal>> positionSignals) {
-        List<Position> routePositions = positionCalculator.calculatePositions(calculationMethod, positionSignals);
         Route route = new Route();
         route.setDevice(device);
-        route.setPositions(routePositions);
         route.setCalculationMethod(calculationMethod);
         route.setCalculationTriggerTime(triggerTime);
-        // TODO: set routeStartTime and routeEndTime
-        //route.setRouteStart();
-        //route.setRouteEnd();
+        List<Position> routePositions = positionCalculator.calculatePositions(calculationMethod, positionSignals, route);
+        route.setPositions(routePositions);
+        route.setRouteStart(!routePositions.isEmpty() ? routePositions.get(0).getPositionTimestamp() : null);
+        route.setRouteEnd(!routePositions.isEmpty() ? routePositions.get(routePositions.size()-1).getPositionTimestamp() : null);
         return routeRepository.save(route);
     }
 

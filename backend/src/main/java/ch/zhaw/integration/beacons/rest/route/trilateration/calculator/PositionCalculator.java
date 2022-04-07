@@ -1,6 +1,7 @@
 package ch.zhaw.integration.beacons.rest.route.trilateration.calculator;
 
 import ch.zhaw.integration.beacons.entities.position.Position;
+import ch.zhaw.integration.beacons.entities.route.Route;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -25,8 +26,8 @@ public class PositionCalculator {
         return calculators.get(calculationMethod);
     }
 
-    public List<Position> calculatePositions(CalculationMethod calculationMethod, List<ImmutableTriple<Signal, Signal, Signal>> positionSignals) {
+    public List<Position> calculatePositions(CalculationMethod calculationMethod, List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
         AbstractPositionCalculator calculator = getCalculator(calculationMethod);
-        return calculator.calculatePositions(positionSignals);
+        return calculator.calculatePositions(positionSignals, route);
     }
 }

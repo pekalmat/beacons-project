@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     // TODO: get new token and update session token
                     Log.i(TAG, "PostRequestResponse is: " + response.toString());
                 },
-                error -> Log.e(TAG, "PostRequestError: " + error.getMessage())
+                error -> Log.e(TAG, "PostRequestError: " + error.toString())
         );
         Log.i(TAG, "Send Tracking Data to server: Number of collected Beacon-Signals:" + postRequestBody.length());
         requestQueue.add(postNewTreatmentListRequest);
