@@ -32,12 +32,4 @@ public class SignalRestController implements ApiRestController {
         return new ResponseEntity<>(newSignalDtoList, HttpStatus.OK);
     }
 
-    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/calculate", method = RequestMethod.GET)
-    public ResponseEntity<List<SignalDto>> matchSignalsWithBeaconsAndCalculateRoute() {
-        signalService.matchSignalsWithBeaconsAndCalculateRoute();
-        LOGGER.info("Signals Matched With Beacons and Route Calculated ");
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-
 }

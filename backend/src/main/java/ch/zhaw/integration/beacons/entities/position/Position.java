@@ -1,15 +1,18 @@
 package ch.zhaw.integration.beacons.entities.position;
 
+import ch.zhaw.integration.beacons.entities.route.Route;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
-import java.util.Date;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -23,16 +26,14 @@ public class Position implements Serializable {
     @SequenceGenerator(name = ID_SEQ, sequenceName = ID_SEQ, allocationSize = 1)
     private Long id;
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Route route;
+
     private String floors;
     private Integer estimatedFloor;
     private double xCoordinate;
     private double yCoordinate;
 
-    private double xCoordinateBasedOnLibraryDistance;
-    private double yCoordinateBasedOnLibraryDistance;
-
-    private Date calculationTriggerTime;
-    private String calculationMethod;
 
     public Long getId() {
         return id;
@@ -40,6 +41,14 @@ public class Position implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Route getRoute() {
+        return route;
+    }
+
+    public void setRoute(Route route) {
+        this.route = route;
     }
 
     public String getFloors() {
@@ -72,38 +81,6 @@ public class Position implements Serializable {
 
     public void setyCoordinate(double yCoordinate) {
         this.yCoordinate = yCoordinate;
-    }
-
-    public double getxCoordinateBasedOnLibraryDistance() {
-        return xCoordinateBasedOnLibraryDistance;
-    }
-
-    public void setxCoordinateBasedOnLibraryDistance(double xCoordinateBasedOnLibraryDistance) {
-        this.xCoordinateBasedOnLibraryDistance = xCoordinateBasedOnLibraryDistance;
-    }
-
-    public double getyCoordinateBasedOnLibraryDistance() {
-        return yCoordinateBasedOnLibraryDistance;
-    }
-
-    public void setyCoordinateBasedOnLibraryDistance(double yCoordinateBasedOnLibraryDistance) {
-        this.yCoordinateBasedOnLibraryDistance = yCoordinateBasedOnLibraryDistance;
-    }
-
-    public Date getCalculationTriggerTime() {
-        return calculationTriggerTime;
-    }
-
-    public void setCalculationTriggerTime(Date calculationTriggerTime) {
-        this.calculationTriggerTime = calculationTriggerTime;
-    }
-
-    public String getCalculationMethod() {
-        return calculationMethod;
-    }
-
-    public void setCalculationMethod(String calculationMethod) {
-        this.calculationMethod = calculationMethod;
     }
 
 }
