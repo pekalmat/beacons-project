@@ -13,10 +13,8 @@ public interface DeviceToDeviceDtoMapper {
     List<DeviceDto> mapDeviceListToDeviceDtoList(List<Device> deviceList);
 
     @Mapping(target = "routes", ignore = true)
-    @Mapping(target = "signals", ignore = true)
     Device mapDeviceDtoToDevice(DeviceDto deviceDto);
 
     @Mapping(target = "routes", ignore = true)
-    @Mapping(target = "signals", ignore = true)
     List<Device> mapDeviceDtoListToDeviceList(List<DeviceDto> deviceDtoList);
 }
