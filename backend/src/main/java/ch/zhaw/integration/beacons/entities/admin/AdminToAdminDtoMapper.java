@@ -14,8 +14,10 @@ public interface AdminToAdminDtoMapper {
     @Mapping(target = "password", ignore = true)
     List<AdminDto> mapAdminListToAdminDtoList(List<Admin> adminList);
 
+    @Mapping(target = "authorities", ignore = true)
     Admin mapAdminDtoToAdmin(AdminDto admin);
 
+    @Mapping(target = "authorities", ignore = true)
     List<Admin> mapAdminDtoListToAdminList(List<AdminDto> adminList);
     
 }

@@ -2,6 +2,8 @@ package ch.zhaw.integration.beacons.rest.signal;
 
 import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import ch.zhaw.integration.beacons.entities.beacon.BeaconRepository;
+import ch.zhaw.integration.beacons.entities.device.Device;
+import ch.zhaw.integration.beacons.entities.device.DeviceRepository;
 import ch.zhaw.integration.beacons.entities.position.Position;
 import ch.zhaw.integration.beacons.entities.position.PositionRepository;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
@@ -29,21 +31,30 @@ public class SignalService {
     private final SignalRepository signalRepository;
     private final BeaconRepository beaconRepository;
     private final PositionRepository positionRepository;
+    private final DeviceRepository deviceRepository;
     private final SignalToSignalDtoMapper signalMapper;
 
     public SignalService(
             SignalRepository signalRepository,
             BeaconRepository beaconRepository,
-            PositionRepository positionRepository) {
+            PositionRepository positionRepository,
+            DeviceRepository deviceRepository) {
         this.signalRepository = signalRepository;
         this.beaconRepository = beaconRepository;
         this.positionRepository = positionRepository;
+        this.deviceRepository = deviceRepository;
         this.signalMapper = Mappers.getMapper(SignalToSignalDtoMapper.class);
     }
 
     List<SignalDto> storeNewSignals(List<SignalDto> signalDtoList) {
-        List<Signal> signals = signalMapper.mapSignalDtoListToSignalList(signalDtoList);
-        List<Signal> persisted = signalRepository.saveAll(signals);
+        List<Signal> newSignals = new ArrayList<>();
+        for(SignalDto signalDto : signalDtoList) {
+            Signal signal = signalMapper.mapSignalDtoToSignal(signalDto);
+            Device device = deviceRepository.findByFingerPrint(signalDto.getDeviceFingerPrint());
+            signal.setDevice(device);
+            newSignals.add(signal);
+        }
+        List<Signal> persisted = signalRepository.saveAll(newSignals);
         return signalMapper.mapSignalListToSignalDtoList(persisted);
     }
 

@@ -8,6 +8,7 @@ import java.util.Date;
 
 public class SignalDto extends RepresentationModel<SignalDto> implements Serializable {
 
+    private Long id;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
     private Date signalTimestamp;
     private String uuid;
@@ -22,6 +23,16 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
     private int rssi;
     private double runningAverageRssi;
     private double distance;
+    private Double calculatedDistance;
+    private String deviceFingerPrint;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Date getSignalTimestamp() {
         return signalTimestamp;
@@ -125,5 +136,21 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
 
     public void setDistance(double distance) {
         this.distance = distance;
+    }
+
+    public Double getCalculatedDistance() {
+        return calculatedDistance;
+    }
+
+    public void setCalculatedDistance(Double calculatedDistance) {
+        this.calculatedDistance = calculatedDistance;
+    }
+
+    public String getDeviceFingerPrint() {
+        return deviceFingerPrint;
+    }
+
+    public void setDeviceFingerPrint(String deviceFingerPrint) {
+        this.deviceFingerPrint = deviceFingerPrint;
     }
 }

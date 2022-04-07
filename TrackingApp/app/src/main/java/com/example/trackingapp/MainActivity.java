@@ -13,6 +13,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -48,9 +49,11 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // REST-API
     private static final String HOST = "http://192.168.1.188:8081";
     private static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
-    private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/doctors/login";
+    private static final String PUT_REGISTER_DEVICE_REQUEST_URL = HOST + "/beacons/api/internal/devices";
+    private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/admins/login";
     private String sessionBearerToken;
     private RequestQueue requestQueue;
+    private String deviceFingerPrint;
     // RANGING-STATUS ON/OFF
     private boolean currentlyRanging = false;
     // Beacon-Manager / Scanner
@@ -69,9 +72,9 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         requestPermissions();
         requestQueue = Volley.newRequestQueue(this);
         // Mock a Login because of authorization check for data fetching/manipulation apis
-        mockLoginToGetBearerToken();
+        requestMockLoginToGetBearerTokenAndRegisterDevice();
         // Setup beaconManager
-        setUpBeaconManager();
+        initializeBeaconManager();
         beaconManager.addMonitorNotifier(this);
         if (insideRegion) {
             updateText("Beacons are visible.");
@@ -80,8 +83,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
             updateText("No beacons are visible.");
         }
     }
-
-    private void setUpBeaconManager() {
+    //setup BeaconScanner
+    private void initializeBeaconManager() {
         beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
 
         // By default the AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
@@ -125,22 +128,24 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         Log.d(TAG, "Started Monitoring");
         beaconManager.startMonitoring(beaconRegion);
     }
-
     // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
-    private void mockLoginToGetBearerToken() {
+    private void requestMockLoginToGetBearerTokenAndRegisterDevice() {
         try {
-            JSONObject jsonBody = new JSONObject("{" + "\"email\":\"admin@example.com\"," + "\"password\":\"admin\"" + "}");
+            JSONObject jsonBody = new JSONObject()
+                .put("email", "admin@example.com")
+                .put("password", "admin");
             CustomJsonObjectRequest mockLoginRequest = new CustomJsonObjectRequest(
                     Request.Method.POST,
                     MOCK_LOGIN_REQUEST_URL,
                     null,
                     jsonBody,
                     response -> {
-                        Log.i(TAG, "MockLoginRequestResponse is: " + response.toString());
+                        Log.i(TAG, "MockLoginRequestResponse successful!");
                         try {
                             JSONObject headers = (JSONObject) response.get("headers");
                             String bearerToken = (String) headers.get("Authorization");
                             sessionBearerToken = "Bearer " + bearerToken;
+                            requestRegisterDevice();
                         } catch (JSONException e) {
                             Log.e(TAG, "Could not extract Authorization header from MockLoginRequest: error: " + e.getMessage());
                         }
@@ -153,6 +158,34 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
             Log.e(TAG,"Could not perform Mock Login on startup.", e);
         }
     }
+    // Request Device
+    private void requestRegisterDevice() {
+        try {
+            String fingerPrint = Build.FINGERPRINT;
+            JSONObject jsonBody = new JSONObject()
+                    .put("fingerPrint", fingerPrint)
+                    .put("manufacturer", Build.MANUFACTURER)
+                    .put("brand", Build.BRAND)
+                    .put("model", Build.MODEL)
+                    .put("sdk", Build.VERSION.SDK_INT);
+            CustomJsonObjectRequest registerDeviceRequest = new CustomJsonObjectRequest(
+                    Request.Method.POST,
+                    PUT_REGISTER_DEVICE_REQUEST_URL,
+                    sessionBearerToken,
+                    jsonBody,
+                    response -> {
+                        Log.i(TAG, "RegisterDeviceRequest successful!");
+                        deviceFingerPrint = fingerPrint;
+                    },
+                    error -> Log.e(TAG, "RegisterDeviceRequestError is: " + error.toString())
+            );
+            Log.i(TAG, "Trying to RegisterDevice");
+            requestQueue.add(registerDeviceRequest);
+        } catch (JSONException e) {
+            Log.e(TAG,"Could not perform Register Device on startup.", e);
+        }
+    }
+
     //
     //
     //  MAIN-LOGIC
@@ -160,15 +193,20 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // Range Notifier -> Main Beacon-Tracking logic
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-        Log.e(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
-        if(beacons.size() != 0) {
-            try {
-                JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
-                createAndSendPostRequest(signalsJsonArray);
-            } catch (JSONException e) {
-                Log.e(TAG, "Error Creating RequestBody");
-                e.printStackTrace();
+        if(sessionBearerToken != null & deviceFingerPrint != null) {
+            Log.i(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
+            if (beacons.size() != 0) {
+                try {
+                    JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
+                    createAndSendPostRequest(signalsJsonArray);
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error Creating RequestBody");
+                    e.printStackTrace();
+                }
             }
+        } else {
+            Log.w(TAG, "!!! Did Range Beacons in Region: Count: " + beacons.size()
+                    + " !!! But NOT collecting Data -> Waiting for LOGIN and DEVICE REGISTRATION response!" );
         }
     }
     //
@@ -192,7 +230,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     .put("txPower", beacon.getTxPower())
                     .put("rssi", beacon.getRssi())
                     .put("runningAverageRssi", beacon.getRunningAverageRssi())
-                    .put("distance", beacon.getDistance());
+                    .put("distance", beacon.getDistance())
+                    .put("deviceFingerPrint", deviceFingerPrint);
             result.put(beaconSignalJson);
         }
         return result;

@@ -1,27 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
-    <changeSet author="Mateusz Pekalski" id="Create beacon-table">
-        <comment>Init Table beacon</comment>
-        <createSequence sequenceName="beacon_id_seq"/>
-        <createTable tableName="beacon">
-            <column name="id" type="BIGINT" defaultValueSequenceNext="beacon_id_seq">
-                <constraints nullable="false"/>
-            </column>
-            <column name="major" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="minor" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="uuid" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="beacon_pkey" tableName="beacon"/>
-    </changeSet>
-
-    <changeSet author="Mateusz Pekalski" id="Create person-table">
+    <changeSet author="Mateusz Pekalski" id="Create-person-table">
         <comment>Init Table person</comment>
         <createSequence sequenceName="person_id_seq"/>
         <createTable tableName="person">
@@ -47,11 +27,51 @@
         <addPrimaryKey columnNames="id" constraintName="person_pkey" tableName="person"/>
     </changeSet>
 
-    <!--________________________________________________________________________________
-            Changes after Initial Setup
-        ________________________________________________________________________________
-        -->
-    <changeSet author="Mateusz Pekalski" id="03.04.2022-1">
+    <changeSet author="Mateusz Pekalski" id="Create-beacon-table">
+        <comment>Init Table beacon</comment>
+        <createSequence sequenceName="beacon_id_seq"/>
+        <createTable tableName="beacon">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="beacon_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="major" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minor" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="geopos" type="VARCHAR(255)"/>
+            <column name="register_source" type="VARCHAR(255)"/>
+            <column name="standort" type="VARCHAR(255)"/>
+            <column name="geoposition" type="VARCHAR(255)"/>
+            <column name="floor" type="VARCHAR(255)"/>
+            <column name="x_coordinate" type ="DOUBLE PRECISION"/>
+            <column name="y_coordinate" type ="DOUBLE PRECISION"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="beacon_pkey" tableName="beacon"/>
+    </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="Create-device-table">
+        <comment>Adding Device Table representing test-device</comment>
+        <createSequence sequenceName="device_id_seq" incrementBy="1" />
+        <createTable tableName="device">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="device_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finger_print" type="VARCHAR(255)"/>
+            <column name="manufacturer" type="VARCHAR(255)"/>
+            <column name="brand" type="VARCHAR(255)"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="sdk" type="INT"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="device_pkey" tableName="device"/>
+    </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="Create-signal-table">
         <comment>Adding Signal Table representing recognised beacon-signals</comment>
         <createSequence sequenceName="signal_id_seq" incrementBy="1" />
         <createTable tableName="signal">
@@ -73,26 +93,14 @@
             <column name="distance" type="DOUBLE PRECISION"/>
             <column name="calculated_distance" type="DOUBLE PRECISION"/>
             <column name="beacon_id" type="BIGINT"/>
+            <column name="device_id" type="BIGINT"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="signal_pkey" tableName="signal"/>
         <addForeignKeyConstraint baseColumnNames="beacon_id" baseTableName="signal" constraintName="beacon_id_fkey_signal" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="beacon"/>
-    </changeSet>
-    
-    <changeSet author="Mateusz Pekalski" id="03.04.2022-2">
-        <comment>Changing Structure of Table Beacon</comment>
-        <addColumn tableName="beacon">
-            <column name="name" type="VARCHAR(255)"/>
-            <column name="geopos" type="VARCHAR(255)"/>
-            <column name="register_source" type="VARCHAR(255)"/>
-            <column name="standort" type="VARCHAR(255)"/>
-            <column name="geoposition" type="VARCHAR(255)"/>
-            <column name="floor" type="VARCHAR(255)"/>
-            <column name="x_coordinate" type ="DOUBLE PRECISION"/>
-            <column name="y_coordinate" type ="DOUBLE PRECISION"/>
-        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="device_id" baseTableName="signal" constraintName="device_id_fkey_signal" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device"/>
     </changeSet>
 
-    <changeSet author="Mateusz Pekalski" id="04.04.2022-1">
+    <changeSet author="Mateusz Pekalski" id="Create-Position-Table">
         <comment>Adding Position Table representing calculated Postions on Route</comment>
         <createSequence sequenceName="position_id_seq" incrementBy="1" />
         <createTable tableName="position">
@@ -110,5 +118,8 @@
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="position_pkey" tableName="position"/>
     </changeSet>
+
+
+
 
 </databaseChangeLog>

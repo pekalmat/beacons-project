@@ -1,6 +1,7 @@
 package ch.zhaw.integration.beacons.entities.signal;
 
 import ch.zhaw.integration.beacons.entities.beacon.Beacon;
+import ch.zhaw.integration.beacons.entities.device.Device;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -43,6 +44,8 @@ public class Signal implements Serializable, Comparable<Signal>{
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Beacon beacon;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Device device;
 
     public Long getId() {
         return id;
@@ -170,6 +173,14 @@ public class Signal implements Serializable, Comparable<Signal>{
 
     public void setCalculatedDistance(Double calculatedDistance) {
         this.calculatedDistance = calculatedDistance;
+    }
+
+    public Device getDevice() {
+        return device;
+    }
+
+    public void setDevice(Device device) {
+        this.device = device;
     }
 
     @Override
