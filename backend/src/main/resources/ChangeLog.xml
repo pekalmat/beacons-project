@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
-    <changeSet author="Mati (generated)" id="INIT-beacon-table">
+    <changeSet author="Mateusz Pekalski" id="Create beacon-table">
         <comment>Init Table beacon</comment>
         <createSequence sequenceName="beacon_id_seq"/>
         <createTable tableName="beacon">
@@ -17,46 +17,11 @@
             <column name="uuid" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="bed_id" type="BIGINT"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="beacon_pkey" tableName="beacon"/>
     </changeSet>
 
-    <changeSet author="Mati (generated)" id="INIT-bed-table">
-        <comment>Init Table bed</comment>
-        <createSequence sequenceName="bed_id_seq"/>
-        <createTable tableName="bed">
-            <column name="id" type="BIGINT" defaultValueSequenceNext="bed_id_seq">
-                <constraints nullable="false"/>
-            </column>
-            <column name="beacon_id" type="BIGINT"/>
-            <column name="patient_id" type="BIGINT"/>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="bed_pkey" tableName="bed"/>
-    </changeSet>
-
-    <changeSet author="Mati (generated)" id="INIT-patient-table">
-        <comment>Init Table patient</comment>
-        <createSequence sequenceName="patient_id_seq"/>
-        <createTable tableName="patient">
-            <column name="id" type="BIGINT" defaultValueSequenceNext="patient_id_seq">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ahv_nr" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="first_name" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="surname" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="bed_id" type="BIGINT"/>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="patient_pkey" tableName="patient"/>
-    </changeSet>
-
-    <changeSet author="Mati (generated)" id="INIT-person-table">
+    <changeSet author="Mateusz Pekalski" id="Create person-table">
         <comment>Init Table person</comment>
         <createSequence sequenceName="person_id_seq"/>
         <createTable tableName="person">
@@ -80,32 +45,6 @@
             </column>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="person_pkey" tableName="person"/>
-    </changeSet>
-
-    <changeSet author="Mati (generated)" id="INIT-treatment-table">
-        <comment>Init Table treatment</comment>
-        <createSequence sequenceName="treatment_id_seq"/>
-        <createTable tableName="treatment">
-            <column name="id" type="BIGINT" defaultValueSequenceNext="treatment_id_seq">
-                <constraints nullable="false"/>
-            </column>
-            <column name="comment" type="VARCHAR(255)"/>
-            <column name="end_time" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="start_time" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="doctor_id" type="BIGINT"/>
-            <column name="patient_id" type="BIGINT"/>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="treatment_pkey" tableName="treatment"/>
-    </changeSet>
-
-    <changeSet author="Mati (generated)" id="INIT-foreign-key-constraints">
-        <comment>Init ForeignKeyConstraints</comment>
-        <addForeignKeyConstraint baseColumnNames="bed_id" baseTableName="patient" constraintName="fk833k041j9274jwm6v3xm0f05f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="bed"/>
-        <addForeignKeyConstraint baseColumnNames="bed_id" baseTableName="beacon" constraintName="fkabdsqxfrfrquywpc475nbuwdo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="bed"/>
-        <addForeignKeyConstraint baseColumnNames="beacon_id" baseTableName="bed" constraintName="fkadvvstnteuy14rwbodbkiaa3x" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="beacon"/>
-        <addForeignKeyConstraint baseColumnNames="doctor_id" baseTableName="treatment" constraintName="fkfq9g2h1sgjsgda11ofxj6ogqw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="person"/>
-        <addForeignKeyConstraint baseColumnNames="patient_id" baseTableName="treatment" constraintName="fkjpqauh9f08891a82no3i8aq7o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="patient"/>
-        <addForeignKeyConstraint baseColumnNames="patient_id" baseTableName="bed" constraintName="fkowulq1hhbpncuwrfxlaspshwu" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="patient"/>
     </changeSet>
 
     <!--________________________________________________________________________________

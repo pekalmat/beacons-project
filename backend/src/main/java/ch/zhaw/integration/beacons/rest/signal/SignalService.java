@@ -3,7 +3,7 @@ package ch.zhaw.integration.beacons.rest.signal;
 import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import ch.zhaw.integration.beacons.entities.beacon.BeaconRepository;
 import ch.zhaw.integration.beacons.entities.position.Position;
-import ch.zhaw.integration.beacons.entities.position.PositionRepoSitory;
+import ch.zhaw.integration.beacons.entities.position.PositionRepository;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.entities.signal.SignalDto;
 import ch.zhaw.integration.beacons.entities.signal.SignalRepository;
@@ -28,13 +28,13 @@ public class SignalService {
 
     private final SignalRepository signalRepository;
     private final BeaconRepository beaconRepository;
-    private final PositionRepoSitory positionRepository;
+    private final PositionRepository positionRepository;
     private final SignalToSignalDtoMapper signalMapper;
 
     public SignalService(
             SignalRepository signalRepository,
             BeaconRepository beaconRepository,
-            PositionRepoSitory positionRepository) {
+            PositionRepository positionRepository) {
         this.signalRepository = signalRepository;
         this.beaconRepository = beaconRepository;
         this.positionRepository = positionRepository;
