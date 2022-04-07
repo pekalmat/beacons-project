@@ -45,6 +45,9 @@ public class SbbBeaconsDataLoader {
                 beacon.setStandort(csvRecord.get("Standort"));
                 beacon.setGeoposition(csvRecord.get("Geoposition"));
                 beacon.setFloor(csvRecord.get("floor"));
+                String[] coordinates = beacon.getGeoposition().split(",");
+                beacon.setxCoordinate(Double.parseDouble(coordinates[0]));
+                beacon.setyCoordinate(Double.parseDouble(coordinates[1]));
                 beacons.add(beacon);
             }
             beaconRepository.saveAll(beacons);

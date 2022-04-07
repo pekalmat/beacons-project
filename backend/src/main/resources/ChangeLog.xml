@@ -130,9 +130,13 @@
             <column name="parser_identifier" type="VARCHAR(255)"/>
             <column name="tx_power" type="INT"/>
             <column name="rssi" type="INT"/>
-            <column name="running_average_rssi" type="DOUBLE"/>
-            <column name="distance" type="DOUBLE"/>
+            <column name="running_average_rssi" type="DOUBLE PRECISION"/>
+            <column name="distance" type="DOUBLE PRECISION"/>
+            <column name="calculated_distance" type="DOUBLE PRECISION"/>
+            <column name="beacon_id" type="BIGINT"/>
         </createTable>
+        <addPrimaryKey columnNames="id" constraintName="signal_pkey" tableName="signal"/>
+        <addForeignKeyConstraint baseColumnNames="beacon_id" baseTableName="signal" constraintName="beacon_id_fkey_signal" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="beacon"/>
     </changeSet>
     
     <changeSet author="Mateusz Pekalski" id="03.04.2022-2">
@@ -144,7 +148,28 @@
             <column name="standort" type="VARCHAR(255)"/>
             <column name="geoposition" type="VARCHAR(255)"/>
             <column name="floor" type="VARCHAR(255)"/>
+            <column name="x_coordinate" type ="DOUBLE PRECISION"/>
+            <column name="y_coordinate" type ="DOUBLE PRECISION"/>
         </addColumn>
+    </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="04.04.2022-1">
+        <comment>Adding Position Table representing calculated Postions on Route</comment>
+        <createSequence sequenceName="position_id_seq" incrementBy="1" />
+        <createTable tableName="position">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="position_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="floors" type="VARCHAR(255)"/>
+            <column name="estimated_floor" type="INT"/>
+            <column name="x_coordinate" type="DOUBLE PRECISION"/>
+            <column name="y_coordinate" type="DOUBLE PRECISION"/>
+            <column name="x_coordinate_based_on_library_distance" type="DOUBLE PRECISION"/>
+            <column name="y_coordinate_based_on_library_distance" type="DOUBLE PRECISION"/>
+            <column name="calculation_trigger_time" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="calculation_method" type="VARCHAR(255)"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="position_pkey" tableName="position"/>
     </changeSet>
 
 </databaseChangeLog>

@@ -44,6 +44,8 @@ public class Beacon implements Serializable {
     private String standort;
     private String geoposition;
     private String floor;
+    private double xCoordinate;
+    private double yCoordinate;
 
     public Long getId() {
         return id;
@@ -127,5 +129,21 @@ public class Beacon implements Serializable {
 
     public void setFloor(String floor) {
         this.floor = floor;
+    }
+
+    public double getxCoordinate() {
+        return xCoordinate;
+    }
+
+    public void setxCoordinate(double xCoordinate) {
+        this.xCoordinate = xCoordinate;
+    }
+
+    public double getyCoordinate() {
+        return yCoordinate;
+    }
+
+    public void setyCoordinate(double yCoordinate) {
+        this.yCoordinate = yCoordinate;
     }
 }

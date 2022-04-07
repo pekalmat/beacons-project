@@ -1,19 +1,23 @@
 package ch.zhaw.integration.beacons.entities.signal;
 
+import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
 import java.util.Date;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Signal implements Serializable {
+public class Signal implements Serializable, Comparable<Signal>{
 
     private static final long serialVersionUID = 1L;
     private static final String ID_SEQ = "signal_id_seq";
@@ -26,15 +30,19 @@ public class Signal implements Serializable {
     private String uuid;
     private String major;
     private String minor;
-    private int serviceUuid;
+    private Integer serviceUuid;
     private String bluetoothAddress;
     private String bluetoothName;
-    private int beaconTypeCode;
+    private Integer beaconTypeCode;
     private String parserIdentifier;
-    private int txPower;
-    private int rssi;
-    private double runningAverageRssi;
-    private double distance;
+    private Integer txPower;
+    private Integer rssi;
+    private Double runningAverageRssi;
+    private Double distance;
+    private Double calculatedDistance;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Beacon beacon;
 
     public Long getId() {
         return id;
@@ -76,11 +84,11 @@ public class Signal implements Serializable {
         this.minor = minor;
     }
 
-    public int getServiceUuid() {
+    public Integer getServiceUuid() {
         return serviceUuid;
     }
 
-    public void setServiceUuid(int serviceUuid) {
+    public void setServiceUuid(Integer serviceUuid) {
         this.serviceUuid = serviceUuid;
     }
 
@@ -100,11 +108,11 @@ public class Signal implements Serializable {
         this.bluetoothName = bluetoothName;
     }
 
-    public int getBeaconTypeCode() {
+    public Integer getBeaconTypeCode() {
         return beaconTypeCode;
     }
 
-    public void setBeaconTypeCode(int beaconTypeCode) {
+    public void setBeaconTypeCode(Integer beaconTypeCode) {
         this.beaconTypeCode = beaconTypeCode;
     }
 
@@ -116,35 +124,56 @@ public class Signal implements Serializable {
         this.parserIdentifier = parserIdentifier;
     }
 
-    public int getTxPower() {
+    public Integer getTxPower() {
         return txPower;
     }
 
-    public void setTxPower(int txPower) {
+    public void setTxPower(Integer txPower) {
         this.txPower = txPower;
     }
 
-    public int getRssi() {
+    public Integer getRssi() {
         return rssi;
     }
 
-    public void setRssi(int rssi) {
+    public void setRssi(Integer rssi) {
         this.rssi = rssi;
     }
 
-    public double getRunningAverageRssi() {
+    public Double getRunningAverageRssi() {
         return runningAverageRssi;
     }
 
-    public void setRunningAverageRssi(double runningAverageRssi) {
+    public void setRunningAverageRssi(Double runningAverageRssi) {
         this.runningAverageRssi = runningAverageRssi;
     }
 
-    public double getDistance() {
+    public Double getDistance() {
         return distance;
     }
 
-    public void setDistance(double distance) {
+    public void setDistance(Double distance) {
         this.distance = distance;
+    }
+
+    public Beacon getBeacon() {
+        return beacon;
+    }
+
+    public void setBeacon(Beacon beacon) {
+        this.beacon = beacon;
+    }
+
+    public Double getCalculatedDistance() {
+        return calculatedDistance;
+    }
+
+    public void setCalculatedDistance(Double calculatedDistance) {
+        this.calculatedDistance = calculatedDistance;
+    }
+
+    @Override
+    public int compareTo(Signal o) {
+        return getSignalTimestamp().compareTo(o.getSignalTimestamp());
     }
 }
