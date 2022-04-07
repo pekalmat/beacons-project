@@ -15,28 +15,19 @@ public class NoSmoothingCalcDistPositionCalculator  extends AbstractPositionCalc
 
     @Override
     double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition) {
-        return calculateDistanceOfSignal(partition.getLeft());
+        return partition.getLeft().getCalculatedDistance();
     }
 
     @Override
     double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition) {
-        return calculateDistanceOfSignal(partition.getRight());
+        return partition.getRight().getCalculatedDistance();
     }
 
     @Override
     double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition) {
-        return calculateDistanceOfSignal(partition.getMiddle());
+        return partition.getMiddle().getCalculatedDistance();
     }
 
-    private double calculateDistanceOfSignal(Signal signal) {
-        //TODO: check which method is correct and adjust Rssi-Distance calculation Documentation
-        // 1. first Simple (as in documentation)
-        double distance1 = Double.parseDouble(String.valueOf(signal.getTxPower())) / Double.parseDouble(String.valueOf(signal.getRssi()));
-        signal.setCalculatedDistance(distance1);
-        // 2. second (as in Excel SpreadSheet) source https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
-        int n = 2; // N (Constant depends on the Environmental factor. Range 2-4)
-        double distance2 = Math.pow(10, ( Double.parseDouble(String.valueOf(Math.subtractExact(signal.getTxPower(), signal.getRssi()))) / (10 * n)));
-        return distance2;
-    }
+
 
 }

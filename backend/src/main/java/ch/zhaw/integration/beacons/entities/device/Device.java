@@ -1,7 +1,6 @@
 package ch.zhaw.integration.beacons.entities.device;
 
 import ch.zhaw.integration.beacons.entities.route.Route;
-import ch.zhaw.integration.beacons.entities.signal.Signal;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -33,9 +32,6 @@ public class Device implements Serializable {
     private String brand;
     private String model;
     private Integer sdk;
-
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<Signal> signals;
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Route> routes;
@@ -86,14 +82,6 @@ public class Device implements Serializable {
 
     public void setSdk(Integer sdk) {
         this.sdk = sdk;
-    }
-
-    public List<Signal> getSignals() {
-        return signals;
-    }
-
-    public void setSignals(List<Signal> signals) {
-        this.signals = signals;
     }
 
     public List<Route> getRoutes() {

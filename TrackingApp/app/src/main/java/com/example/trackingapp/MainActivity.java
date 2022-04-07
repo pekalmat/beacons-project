@@ -114,7 +114,9 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
         beaconManager.setEnableScheduledScanJobs(false);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setBackgroundScanPeriod(100);
+        beaconManager.setBackgroundScanPeriod(500);
+        beaconManager.setForegroundBetweenScanPeriod(0);
+        beaconManager.setForegroundScanPeriod(500);
 
         Log.d(TAG, "setting up background monitoring in app onCreate");
         /*beaconManager.addMonitorNotifier(this);*/
@@ -150,7 +152,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                             Log.e(TAG, "Could not extract Authorization header from MockLoginRequest: error: " + e.getMessage());
                         }
                     },
-                    error -> Log.e(TAG, "MockLoginRequestError is: " + error.getMessage())
+                    error -> Log.e(TAG, "MockLoginRequestError is: " + error.toString())
             );
             Log.i(TAG, "Trying to MockLogin");
             requestQueue.add(mockLoginRequest);

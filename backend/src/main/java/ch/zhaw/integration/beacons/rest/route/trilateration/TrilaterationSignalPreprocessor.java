@@ -27,7 +27,21 @@ public class TrilaterationSignalPreprocessor {
         // Sort by SignalTimestamp
         Collections.sort(signals);
         // Connect Signals with Known Beacons
+        enrichSignalWithCalculatedDistance(signals);
         return connectSignalsWithKnownSbbBeacons(signals);
+    }
+
+    private void enrichSignalWithCalculatedDistance(List<Signal> signals) {
+        for(Signal signal : signals) {
+            //TODO: check which method is correct and adjust Rssi-Distance calculation Documentation
+            // 1. first Simple (as in documentation)
+            double distance1 = Double.parseDouble(String.valueOf(signal.getTxPower())) / Double.parseDouble(String.valueOf(signal.getRssi()));
+            signal.setCalculatedDistance(distance1);
+            // 2. second (as in Excel SpreadSheet) source https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
+            int n = 2; // N (Constant depends on the Environmental factor. Range 2-4)
+            double distance2 = Math.pow(10, (Double.parseDouble(String.valueOf(Math.subtractExact(signal.getTxPower(), signal.getRssi()))) / (10 * n)));
+            signal.setCalculatedDistance(distance2);
+        }
     }
 
     private List<Signal> connectSignalsWithKnownSbbBeacons(List<Signal> signals) {

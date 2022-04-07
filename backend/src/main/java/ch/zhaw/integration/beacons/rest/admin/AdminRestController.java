@@ -32,7 +32,7 @@ public class AdminRestController implements ApiRestController {
     @RequestMapping(value = PUBLIC_ADMINS_PATH + "/login", method = RequestMethod.POST, consumes="application/json")
     public ResponseEntity<AdminDto> loginAdmin(@RequestBody AdminDto adminDto) throws NotFoundException {
         AdminDto responseDto = adminService.authenticateLogin(adminDto);
-        LOGGER.debug("Admin: " + adminDto.getEmail() + " Response: " + HttpStatus.OK);
+        LOGGER.info("loginAdmin-API requested: " + adminDto.getEmail() + " Response: " + HttpStatus.OK);
         return ResponseEntity.ok()
                 .header(HttpHeaders.AUTHORIZATION, jwtTokenUtil.generateToken(adminDto.getEmail()))
                 .body(responseDto);
