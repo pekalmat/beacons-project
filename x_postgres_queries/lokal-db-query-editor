@@ -1,0 +1,37 @@
+-- Drop And Recreate Schema  after DB-Changes
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+--
+--
+-- Test Daten/Signale für Berechnung Testing --
+insert into public.device(id,finger_print,manufacturer,brand,model,sdk) values (1, 'OnePlus/Nord_EEA/Nord:11/RP1A.201005.001/2203101723:user/release-keys', 'OnePlus', 'OnePlus', 'Nord', 30);
+insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (1, (SELECT CURRENT_DATE),'47048.63762','47048', '63762', -69, -80, 3.5, 1);
+insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (2, (SELECT CURRENT_DATE),'45988.40746','45988', '40746', -69, -80, 3.5, 1);
+insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (3, (SELECT CURRENT_DATE),'44576.4548','44576', '45480', -69, -80, 3.5, 1);
+id	signal_timestamp	uuid		major	minor	txPower	rssi	distance	CALCULATED DISTANCE
+1	04.04.2022			47048.63762	47048	63762	-69		-80		3.5			3.548133892
+2	04.04.2022			45988.40746	45988	40746	-69		-80		3.5			3.548133892
+3	04.04.2022			44576.4548	44576	45480	-69		-80		3.5			3.548133892
+--
+--
+select * from public.beacon;
+select * from public.device;
+select * from public.person;
+select * from public.position;
+select * from public.signal;
+select * from public.route;
+
+select count(*) from public.beacon;
+
+DELETE FROM public.device;
+DELETE FROM public.position;
+DELETE FROM public.signal;
+
+select * from public.beacon where floor like '-3';
+select count(*) from public.beacon where floor like '0';
+select * from public.beacon where major in ('44576','45988','47048');
+select * from public.beacon where uuid like '44576.45480'
+links: "47.3777970882, 8.53906238235" Floor: -2
+rechts: "47.3777909, 8.5391352" Floor: -2
+neue Koordinaten für Tracking Punkte: (floor: -2)
+	"47.377789, 8.539134"
