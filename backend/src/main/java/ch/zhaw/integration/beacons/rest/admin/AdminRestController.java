@@ -4,7 +4,6 @@ import ch.zhaw.integration.beacons.entities.admin.AdminDto;
 import ch.zhaw.integration.beacons.error.exception.EmailInUseException;
 import ch.zhaw.integration.beacons.rest.ApiRestController;
 import ch.zhaw.integration.beacons.security.JwtTokenUtil;
-import javassist.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -29,8 +28,18 @@ public class AdminRestController implements ApiRestController {
         this.jwtTokenUtil = jwtTokenUtil;
     }
 
+    /**
+     *  API for authorizing admin-user
+     *
+     *  @url:           "<host>"/beacons/api/public/admins/login
+     *  @method:        POST
+     *  @body-param:    adminDto: JSON-Object
+     *  @returns:       HttpStatus = 200, JSON-Object of authorized adminUser
+     *  @returnsHeader:  bearerToken used for private-API authorization
+     *
+     * */
     @RequestMapping(value = PUBLIC_ADMINS_PATH + "/login", method = RequestMethod.POST, consumes="application/json")
-    public ResponseEntity<AdminDto> loginAdmin(@RequestBody AdminDto adminDto) throws NotFoundException {
+    public ResponseEntity<AdminDto> loginAdmin(@RequestBody AdminDto adminDto) {
         AdminDto responseDto = adminService.authenticateLogin(adminDto);
         LOGGER.info("loginAdmin-API requested: " + adminDto.getEmail() + " Response: " + HttpStatus.OK);
         return ResponseEntity.ok()
@@ -38,10 +47,19 @@ public class AdminRestController implements ApiRestController {
                 .body(responseDto);
     }
 
+    /**
+     *  API for creating new admin-user
+     *
+     *  @url:           "<host>"/beacons/api/public/admins/signup
+     *  @method:        POST
+     *  @body-param:    adminDto: JSON-Object
+     *  @returns:       HttpStatus = 200, JSON-Object of created adminUser
+     *
+     * */
     @RequestMapping(value = PUBLIC_ADMINS_PATH + "/signup", method = RequestMethod.POST, consumes="application/json")
-    public ResponseEntity signUp(@RequestBody AdminDto adminDto) throws EmailInUseException {
+    public ResponseEntity signUpAdmin(@RequestBody AdminDto adminDto) throws EmailInUseException {
         adminService.createNewAdminAccount(adminDto);
-        LOGGER.debug("User: " + adminDto.getEmail() + " Response: " + HttpStatus.OK);
+        LOGGER.info("signUpAdmin-API requested: User: " + adminDto.getEmail() + " Response: " + HttpStatus.OK);
         return new ResponseEntity(HttpStatus.OK);
     }
 

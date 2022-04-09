@@ -2,6 +2,7 @@ package ch.zhaw.integration.beacons.rest.route;
 
 import ch.zhaw.integration.beacons.entities.route.RouteDto;
 import ch.zhaw.integration.beacons.rest.ApiRestController;
+import ch.zhaw.integration.beacons.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,10 +28,22 @@ public class RouteRestController implements ApiRestController {
         this.routeService = routeService;
     }
 
+    /**
+     *  API for calculating route for given time-period
+     *          -> matches Signals with Beacons, enriches Signals with calculatedDistance & persist changes
+     *          -> calculated routes stored in out/routes-folder
+     *
+     *  @url:           "<host>"/beacons/api/internal/routes/calculate
+     *  @method:        GET
+     *  @query-param:   routeStart: String (e.g. format: 2022-04-07 20:00:00)
+     *  @query-param:   routeEnd: String   (e.g. format: 2022-04-09 20:26:00)
+     *  @returns:       HttpStatus = 200, JSON-Array of calculated routes
+     *
+     * */
     @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/calculate", method = RequestMethod.GET)
     public ResponseEntity<List<RouteDto>> calculateRoutes(
-            @RequestParam("routeStart") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date routeStart,
-            @RequestParam("routeEnd") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date routeEnd) {
+            @RequestParam("routeStart") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeStart,
+            @RequestParam("routeEnd") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeEnd) {
         List<RouteDto> calculatedRoutes = routeService.calculateRoutes(routeStart, routeEnd);
         LOGGER.info("Routes Calculated  count: " + calculatedRoutes.size());
         return new ResponseEntity<>(calculatedRoutes, HttpStatus.OK);

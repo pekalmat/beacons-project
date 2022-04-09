@@ -27,14 +27,18 @@ public class Device implements Serializable {
     @SequenceGenerator(name = ID_SEQ, sequenceName = ID_SEQ, allocationSize = 1)
     private Long id;
 
-    private String fingerPrint;
-    private String manufacturer;
-    private String brand;
-    private String model;
-    private Integer sdk;
-
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Route> routes;
+
+    private String fingerPrint;
+
+    private String manufacturer;
+
+    private String brand;
+
+    private String model;
+
+    private Integer sdk;
 
     public Long getId() {
         return id;

@@ -25,10 +25,35 @@ public class SignalRestController implements ApiRestController {
         this.signalService = signalService;
     }
 
+    /**
+     *  API for storing detected beacon-signals by the android-client
+     *
+     *  @url:           "<host>"/beacons/api/internal/signals
+     *  @method:        POST
+     *  @body-param:    signalDtoList: JSON-Array
+     *  @returns:       HttpStatus = 200, JSON-Array of persisted signals
+     *
+     * */
     @RequestMapping(value =  INTERNAL_SIGNALS_PATH, method = RequestMethod.POST, consumes = "application/json")
-    public ResponseEntity<List<SignalDto>> storeNewTreatments(@RequestBody List<SignalDto> signalDtoList) {
+    public ResponseEntity<List<SignalDto>> storeNewSignals(@RequestBody List<SignalDto> signalDtoList) {
         List<SignalDto> newSignalDtoList = signalService.storeNewSignals(signalDtoList);
         LOGGER.debug("Persisted new Signal: count: " + newSignalDtoList.size() + " of " + signalDtoList.size());
+        return new ResponseEntity<>(newSignalDtoList, HttpStatus.OK);
+    }
+
+    /**
+     *  API to trigger Signal-Data-Backup import
+     *
+     *  @url:           "<host>"/beacons/api/internal/signals/import_backup
+     *  @method:        POST
+     *  @body-param:    resourceFilePath: String (point to file in resources eg.: backup/xxx.csv
+     *  @returns:       HttpStatus = 200, JSON-Array of imported signals
+     *
+     * */
+    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/import_backup", method = RequestMethod.POST)
+    public ResponseEntity<List<SignalDto>> triggerImportBackupFromCsv(@RequestBody String resourceFilePath) {
+        List<SignalDto> newSignalDtoList = signalService.importBackupFromCsv(resourceFilePath);
+        LOGGER.info("Persisted new Signal: count: " + newSignalDtoList.size());
         return new ResponseEntity<>(newSignalDtoList, HttpStatus.OK);
     }
 

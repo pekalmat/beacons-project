@@ -6,6 +6,7 @@ import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.entities.signal.SignalDto;
 import ch.zhaw.integration.beacons.entities.signal.SignalRepository;
 import ch.zhaw.integration.beacons.entities.signal.SignalToSignalDtoMapper;
+import ch.zhaw.integration.beacons.rest.signal.importer.SignalBackupDataImporter;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Component;
 
@@ -17,19 +18,22 @@ public class SignalService {
 
     private final SignalRepository signalRepository;
     private final DeviceRepository deviceRepository;
+    private final SignalBackupDataImporter signalBackupDataImporter;
     private final SignalToSignalDtoMapper signalMapper;
 
     public SignalService(
             SignalRepository signalRepository,
-            DeviceRepository deviceRepository) {
+            DeviceRepository deviceRepository,
+            SignalBackupDataImporter signalBackupDataImporter) {
         this.signalRepository = signalRepository;
         this.deviceRepository = deviceRepository;
+        this.signalBackupDataImporter = signalBackupDataImporter;
         this.signalMapper = Mappers.getMapper(SignalToSignalDtoMapper.class);
     }
 
     List<SignalDto> storeNewSignals(List<SignalDto> signalDtoList) {
         List<Signal> newSignals = new ArrayList<>();
-        for(SignalDto signalDto : signalDtoList) {
+        for (SignalDto signalDto : signalDtoList) {
             Signal signal = signalMapper.mapSignalDtoToSignal(signalDto);
             Device device = deviceRepository.findByFingerPrint(signalDto.getDeviceFingerPrint());
             signal.setDevice(device);
@@ -39,5 +43,8 @@ public class SignalService {
         return signalMapper.mapSignalListToSignalDtoList(persisted);
     }
 
-
+    List<SignalDto> importBackupFromCsv(String resourceFilePath) {
+        List<Signal> signals = signalBackupDataImporter.importBackupFromCsv(resourceFilePath);
+        return signalMapper.mapSignalListToSignalDtoList(signals);
+    }
 }

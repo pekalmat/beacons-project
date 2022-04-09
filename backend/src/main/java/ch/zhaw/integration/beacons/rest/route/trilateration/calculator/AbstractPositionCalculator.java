@@ -16,12 +16,12 @@ import java.util.List;
 @Component
 public abstract class AbstractPositionCalculator {
 
-    abstract CalculationMethod getCalculationMethod();
-    abstract double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition);
-    abstract double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition);
-    abstract double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition);
+    public abstract CalculationMethod getCalculationMethod();
+    public abstract double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition);
+    public abstract double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition);
+    public abstract double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition);
 
-    List<Position> calculatePositions(List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
+    public List<Position> calculatePositions(List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
         List<Position> positions = new ArrayList<>();
         for (ImmutableTriple<Signal, Signal, Signal> position : positionSignals) {
             Position calculatedPosition = new Position();

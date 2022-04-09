@@ -1,5 +1,6 @@
 package ch.zhaw.integration.beacons.entities.signal;
 
+import ch.zhaw.integration.beacons.utils.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -9,7 +10,7 @@ import java.util.Date;
 public class SignalDto extends RepresentationModel<SignalDto> implements Serializable {
 
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateUtils.YYYY_MM_DD_HH_MM_SS_SSS)
     private Date signalTimestamp;
     private String uuid;
     private String major;

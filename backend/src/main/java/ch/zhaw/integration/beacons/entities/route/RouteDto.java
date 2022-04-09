@@ -1,5 +1,6 @@
 package ch.zhaw.integration.beacons.entities.route;
 
+import ch.zhaw.integration.beacons.utils.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -9,11 +10,11 @@ import java.util.Date;
 public class RouteDto extends RepresentationModel<RouteDto> implements Serializable {
 
     private Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateUtils.YYYY_MM_DD_HH_MM_SS_SSS)
     private Date routeStart;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateUtils.YYYY_MM_DD_HH_MM_SS_SSS)
     private Date routeEnd;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DateUtils.YYYY_MM_DD_HH_MM_SS_SSS)
     private Date calculationTriggerTime;
     private String calculationMethod;
 

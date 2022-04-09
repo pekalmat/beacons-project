@@ -47,7 +47,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
     // REST-API
-    private static final String HOST = "http://192.168.1.188:8081";
+    private static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
+    // private static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
     private static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
     private static final String PUT_REGISTER_DEVICE_REQUEST_URL = HOST + "/beacons/api/internal/devices";
     private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/admins/login";
@@ -75,7 +76,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         requestMockLoginToGetBearerTokenAndRegisterDevice();
         // Setup beaconManager
         initializeBeaconManager();
-        beaconManager.addMonitorNotifier(this);
         if (insideRegion) {
             updateText("Beacons are visible.");
         }
@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
 
         Log.d(TAG, "Started Monitoring");
         beaconManager.startMonitoring(beaconRegion);
+        beaconManager.addMonitorNotifier(this);
     }
     // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
     private void requestMockLoginToGetBearerTokenAndRegisterDevice() {
@@ -187,7 +188,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
             Log.e(TAG,"Could not perform Register Device on startup.", e);
         }
     }
-
     //
     //
     //  MAIN-LOGIC
@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
         return result;
     }
-
+    //
     private void createAndSendPostRequest(JSONArray postRequestBody) {
         // Create and POST Json-PostRequest
         CustomJsonArrayRequest postNewTreatmentListRequest = new CustomJsonArrayRequest(
@@ -262,6 +262,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     //
     // Triggered when Ranging Button is clicked
     public void onRanging(View view){
+        Log.i(TAG, "Ranging BUtton is clicket");
         if(!currentlyRanging) {
             RangeNotifier rangeNotifier = (beacons, region) -> {
                 if (beacons.size() > 0) {
@@ -284,8 +285,9 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // Triggered when Monitoring Button is clicked
     @SuppressLint("SetTextI18n")
     public void onScan(View view) {
+        Log.i(TAG, "monitoring button clicket");
         // This is a toggle.  Each time we tap it, we start or stop
-        Button button = (Button) findViewById(R.id.scanButton);
+        Button button = findViewById(R.id.scanButton);
 
         if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
             BeaconManager.getInstanceForApplication(this).stopMonitoring(beaconRegion);
@@ -424,15 +426,17 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     }
     // Log the Beacon Details to the Screen when Ranging
     private void logToDisplay(String line) {
+        Log.i(TAG, "logToDisplay method Triggered -> changing rangingText");
         runOnUiThread(() -> {
-            TextView editText = (TextView) MainActivity.this.findViewById(R.id.rangingText);
+            TextView editText = MainActivity.this.findViewById(R.id.rangingText);
             editText.setText(line);
         });
     }
     // Update the visibility text
     private void updateText(String line) {
+        Log.i(TAG, "updateText method Triggered -> changing monitoring");
         runOnUiThread(() -> {
-            TextView editText = (TextView) MainActivity.this.findViewById(R.id.monitoringText);
+            TextView editText = MainActivity.this.findViewById(R.id.monitoringText);
             editText.setText(line);
         });
     }

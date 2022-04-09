@@ -24,6 +24,16 @@ public class DeviceRestController implements ApiRestController {
         this.deviceService = deviceService;
     }
 
+
+    /**
+     *  API for creating new device if not registered yet
+     *
+     *  @url:           "<host>"/beacons/api/internal/devices
+     *  @method:        POST
+     *  @body-param:    deviceDto: JSON-Object
+     *  @returns:       HttpStatus = 200, JSON-Object of persisted device
+     *
+     * */
     @RequestMapping(value = INTERNAL_DEVICES_PATH, method = RequestMethod.POST, consumes = "application/json")
     public ResponseEntity<DeviceDto> registerDeviceDevice(@RequestBody DeviceDto deviceDto){
         DeviceDto newDeviceDto = deviceService.createDevice(deviceDto);

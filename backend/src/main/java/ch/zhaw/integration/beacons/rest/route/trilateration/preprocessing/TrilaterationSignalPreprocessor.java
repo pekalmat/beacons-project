@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.rest.route.trilateration;
+package ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing;
 
 import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import ch.zhaw.integration.beacons.entities.beacon.BeaconRepository;
@@ -23,7 +23,7 @@ public class TrilaterationSignalPreprocessor {
         this.signalRepository = signalRepository;
     }
 
-    List<Signal> preprocess(List<Signal> signals) {
+    public List<Signal> preprocess(List<Signal> signals) {
         // Sort by SignalTimestamp
         Collections.sort(signals);
         // Connect Signals with Known Beacons
@@ -43,7 +43,7 @@ public class TrilaterationSignalPreprocessor {
     private List<Signal> connectSignalsWithKnownSbbBeacons(List<Signal> signals) {
         List<Signal> matchedSignals = new ArrayList<>();
         for(Signal signal : signals) {
-            Beacon matchingBeacon = beaconRepository.findBeaconByUuidAndMajorAndMinor(signal.getUuid(), signal.getMajor(), signal.getMinor());
+            Beacon matchingBeacon = beaconRepository.findBeaconByMajorAndMinor(signal.getMajor(), signal.getMinor());
             if(matchingBeacon != null) {
                 signal.setBeacon(matchingBeacon);
                 matchedSignals.add(signal);

@@ -33,12 +33,19 @@ public class Beacon implements Serializable {
     private String major;
 
     private String name;
+
     private String geopos;
+
     private String registerSource;
+
     private String standort;
+
     private String geoposition;
+
     private String floor;
+
     private double xCoordinate;
+
     private double yCoordinate;
 
     public Long getId() {

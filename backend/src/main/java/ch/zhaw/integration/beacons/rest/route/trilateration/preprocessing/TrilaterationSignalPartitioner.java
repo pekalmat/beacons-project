@@ -1,4 +1,4 @@
-package ch.zhaw.integration.beacons.rest.route.trilateration;
+package ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing;
 
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -52,12 +52,12 @@ public class TrilaterationSignalPartitioner {
     private List<ImmutableTriple<Signal, Signal, Signal>> distinctDuplicateTriples(List<ImmutableTriple<Signal, Signal, Signal>> triples) {
         List<ImmutableTriple<Signal, Signal, Signal>> result = new ArrayList<>();
         for(ImmutableTriple<Signal, Signal, Signal> triple : triples) {
-            List<Signal> tripleList = List.of(triple.getLeft(), triple.getMiddle(), triple.getRight());
             boolean existsInResultList = false;
             for(ImmutableTriple<Signal, Signal, Signal> resultEntry : result) {
                 List<Signal> resultEntryList = List.of(resultEntry.getLeft(), resultEntry.getMiddle(), resultEntry.getRight());
-                if(resultEntryList.contains(triple.getLeft()) && resultEntryList.contains(triple.getMiddle()) && resultEntryList.contains(triple.getRight())) {
+                if (resultEntryList.contains(triple.getLeft()) && resultEntryList.contains(triple.getMiddle()) && resultEntryList.contains(triple.getRight())) {
                     existsInResultList = true;
+                    break;
                 }
             }
             if(!existsInResultList) {

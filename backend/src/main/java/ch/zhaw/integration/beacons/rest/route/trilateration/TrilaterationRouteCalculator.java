@@ -6,6 +6,8 @@ import ch.zhaw.integration.beacons.entities.route.Route;
 import ch.zhaw.integration.beacons.entities.route.RouteRepository;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.rest.route.trilateration.calculator.PositionCalculator;
+import ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing.TrilaterationSignalPartitioner;
+import ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing.TrilaterationSignalPreprocessor;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;

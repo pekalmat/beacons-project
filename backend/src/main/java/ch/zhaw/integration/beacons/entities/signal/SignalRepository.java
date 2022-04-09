@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface SignalRepository extends JpaRepository<Signal, Long> {
 
-    List<Signal> findAllByDevice(Device device);
-
     List<Signal> findAllByDeviceAndSignalTimestampBetween(Device device, Date signalTimestampStart, Date signalTimestampEnd);
+
+    List<Signal> findAllByMajorAndMinor(String major, String minor);
 
 }

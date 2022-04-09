@@ -40,9 +40,11 @@ public class Route implements Serializable {
     private List<Position> positions;
 
     private Date routeStart;
+
     private Date routeEnd;
 
     private Date calculationTriggerTime;
+
     @Enumerated(EnumType.STRING)
     private CalculationMethod calculationMethod;
 

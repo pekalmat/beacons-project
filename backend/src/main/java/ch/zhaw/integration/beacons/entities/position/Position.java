@@ -31,9 +31,13 @@ public class Position implements Serializable {
     private Route route;
 
     private String floors;
+
     private Integer estimatedFloor;
+
     private double xCoordinate;
+
     private double yCoordinate;
+
     private Date positionTimestamp;
 
     public Long getId() {

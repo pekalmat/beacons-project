@@ -27,25 +27,40 @@ public class Signal implements Serializable, Comparable<Signal>{
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = ID_SEQ)
     @SequenceGenerator(name = ID_SEQ, sequenceName = ID_SEQ, allocationSize = 1)
     private Long id;
-    private Date signalTimestamp;
-    private String uuid;
-    private String major;
-    private String minor;
-    private Integer serviceUuid;
-    private String bluetoothAddress;
-    private String bluetoothName;
-    private Integer beaconTypeCode;
-    private String parserIdentifier;
-    private Integer txPower;
-    private Integer rssi;
-    private Double runningAverageRssi;
-    private Double distance;
-    private Double calculatedDistance;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Beacon beacon;
+
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Device device;
+
+    private Date signalTimestamp;
+
+    private String uuid;
+
+    private String major;
+
+    private String minor;
+
+    private Integer serviceUuid;
+
+    private String bluetoothAddress;
+
+    private String bluetoothName;
+
+    private Integer beaconTypeCode;
+
+    private String parserIdentifier;
+
+    private Integer txPower;
+
+    private Integer rssi;
+
+    private Double runningAverageRssi;
+
+    private Double distance;
+
+    private Double calculatedDistance;
 
     public Long getId() {
         return id;

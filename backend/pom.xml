@@ -136,6 +136,13 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <executable>true</executable>
+                    <jvmArguments>
+                        -Xms2g
+                        -Xmx4g
+                    </jvmArguments>
+                </configuration>
             </plugin>
             <!-- generating Mapstruct Mappers -->
             <plugin>
