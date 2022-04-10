@@ -18,7 +18,7 @@ import java.util.Date;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Signal implements Serializable, Comparable<Signal>{
+public class Signal implements Serializable, Comparable<Signal> {
 
     private static final long serialVersionUID = 1L;
     private static final String ID_SEQ = "signal_id_seq";

@@ -46,6 +46,25 @@ public abstract class AbstractPositionCalculator {
         return positions;
     }
 
+/*    // TODO: Optional check this Trilateration library
+    //newTril(location1, location2, location3, distance1, distance2, distance3);
+    private void newTril(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3) {
+        double[][] positions = new double[][] {
+                { location1.getFirst(), location1.getSecond() },
+                { location2.getFirst(), location2.getSecond() },
+                { location3.getFirst(), location3.getSecond() }};
+        //double[] distances = new double[] { 50.0, 50.0, 50.0};
+        double[] distances = new double[] { distance1, distance2, distance3};
+        NonLinearLeastSquaresSolver solver = new NonLinearLeastSquaresSolver(new TrilaterationFunction(positions, distances), new LevenbergMarquardtOptimizer());
+        LeastSquaresOptimizer.Optimum optimum = solver.solve();
+// the answer
+        double[] centroid = optimum.getPoint().toArray();
+// error and geometry information; may throw SingularMatrixException depending the threshold argument provided
+        RealVector standardDeviation = optimum.getSigma(0);
+        RealMatrix covarianceMatrix = optimum.getCovariances(0);
+    }
+*/
+
     private Date getSignalTimestampMeanForPositionTimestamp(ImmutableTriple<Signal, Signal, Signal> position) {
         BigInteger total = BigInteger.ZERO;
         List<Date> signalDates = List.of(position.getLeft().getSignalTimestamp(), position.getMiddle().getSignalTimestamp(), position.getRight().getSignalTimestamp());

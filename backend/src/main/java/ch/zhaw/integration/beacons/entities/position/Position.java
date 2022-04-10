@@ -17,7 +17,7 @@ import java.util.Date;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Position implements Serializable {
+public class Position implements Serializable, Comparable<Position>{
 
     private static final long serialVersionUID = 1L;
     private static final String ID_SEQ = "position_id_seq";
@@ -95,4 +95,10 @@ public class Position implements Serializable {
     public void setPositionTimestamp(Date positionTimestamp) {
         this.positionTimestamp = positionTimestamp;
     }
+
+    @Override
+    public int compareTo(Position o) {
+        return getPositionTimestamp().compareTo(o.getPositionTimestamp());
+    }
+
 }

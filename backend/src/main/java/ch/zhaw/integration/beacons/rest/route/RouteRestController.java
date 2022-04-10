@@ -37,15 +37,36 @@ public class RouteRestController implements ApiRestController {
      *  @method:        GET
      *  @query-param:   routeStart: String (e.g. format: 2022-04-07 20:00:00)
      *  @query-param:   routeEnd: String   (e.g. format: 2022-04-09 20:26:00)
+     *  @query-param:   type: String (Point/Line)
      *  @returns:       HttpStatus = 200, JSON-Array of calculated routes
      *
      * */
     @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/calculate", method = RequestMethod.GET)
     public ResponseEntity<List<RouteDto>> calculateRoutes(
             @RequestParam("routeStart") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeStart,
-            @RequestParam("routeEnd") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeEnd) {
-        List<RouteDto> calculatedRoutes = routeService.calculateRoutes(routeStart, routeEnd);
+            @RequestParam("routeEnd") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeEnd,
+            @RequestParam String type) {
+        LOGGER.info("Routes calculation running...");
+        List<RouteDto> calculatedRoutes = routeService.calculateRoutes(routeStart, routeEnd, type);
         LOGGER.info("Routes Calculated  count: " + calculatedRoutes.size());
         return new ResponseEntity<>(calculatedRoutes, HttpStatus.OK);
     }
+
+    /**
+     *  API exporting already calculated routes to csv file in out/routes-folder
+     *
+     *  @url:           "<host>"/beacons/api/internal/routes/export
+     *  @method:        GET
+     *  @query-param:   routeId: Long
+     *  @query-param:   type: String (Point/Line)
+     *  @returns:       HttpStatus = 200, JSON-Object of exported route
+     *
+     * */
+    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/export", method = RequestMethod.GET)
+    public ResponseEntity<RouteDto> exportRoute(@RequestParam Long routeId, @RequestParam String type) {
+        RouteDto exportedRoute = routeService.exportRoute(routeId, type);
+        LOGGER.info("Route exported to csv: " + exportedRoute);
+        return new ResponseEntity<>(exportedRoute, HttpStatus.OK);
+    }
+
 }

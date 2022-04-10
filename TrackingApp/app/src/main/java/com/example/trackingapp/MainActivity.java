@@ -27,7 +27,6 @@ import com.android.volley.toolbox.Volley;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.json.JSONArray;
@@ -39,7 +38,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity  implements MonitorNotifier, RangeNotifier {
+public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
 
     // Logger-TAG
     private static final String TAG =  "########## MainActivity ##########";
@@ -47,8 +46,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
     private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
     // REST-API
-    private static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
-    // private static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
+    //private static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
+     private static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
     private static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
     private static final String PUT_REGISTER_DEVICE_REQUEST_URL = HOST + "/beacons/api/internal/devices";
     private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/admins/login";
@@ -59,7 +58,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     private boolean currentlyRanging = false;
     // Beacon-Manager / Scanner
     private BeaconManager beaconManager;
-    private static boolean insideRegion = false;
+    private static Long detectedSignalsCount = Long.valueOf(0);
     public static final Region beaconRegion = new Region("beaconRegion", null, null, null);
     //
     // APPLICATION_START_UP
@@ -73,15 +72,10 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         requestPermissions();
         requestQueue = Volley.newRequestQueue(this);
         // Mock a Login because of authorization check for data fetching/manipulation apis
+        updateText("Login in progress...");
         requestMockLoginToGetBearerTokenAndRegisterDevice();
         // Setup beaconManager
         initializeBeaconManager();
-        if (insideRegion) {
-            updateText("Beacons are visible.");
-        }
-        else {
-            updateText("No beacons are visible.");
-        }
     }
     //setup BeaconScanner
     private void initializeBeaconManager() {
@@ -128,8 +122,10 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
         }
 
         Log.d(TAG, "Started Monitoring");
-        beaconManager.startMonitoring(beaconRegion);
-        beaconManager.addMonitorNotifier(this);
+        beaconManager.startRangingBeacons(beaconRegion);
+        beaconManager.addRangeNotifier(this);
+        //beaconManager.startMonitoring(beaconRegion);
+        //beaconManager.addMonitorNotifier(this);
     }
     // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
     private void requestMockLoginToGetBearerTokenAndRegisterDevice() {
@@ -148,16 +144,22 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                             JSONObject headers = (JSONObject) response.get("headers");
                             String bearerToken = (String) headers.get("Authorization");
                             sessionBearerToken = "Bearer " + bearerToken;
+                            updateText("Login succesfull -> Registering Device now...");
                             requestRegisterDevice();
                         } catch (JSONException e) {
+                            updateText("Login failed - Could not extract Auth-Header from request response");
                             Log.e(TAG, "Could not extract Authorization header from MockLoginRequest: error: " + e.getMessage());
                         }
                     },
-                    error -> Log.e(TAG, "MockLoginRequestError is: " + error.toString())
+                    error -> {
+                        updateText("Login Request Failed");
+                        Log.e(TAG, "MockLoginRequestError is: " + error.toString());
+                    }
             );
             Log.i(TAG, "Trying to MockLogin");
             requestQueue.add(mockLoginRequest);
         } catch (JSONException e) {
+            updateText("Login Failed creating request body");
             Log.e(TAG,"Could not perform Mock Login on startup.", e);
         }
     }
@@ -177,14 +179,19 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     sessionBearerToken,
                     jsonBody,
                     response -> {
+                        updateText("RegisterDeviceRequest successful");
                         Log.i(TAG, "RegisterDeviceRequest successful!");
                         deviceFingerPrint = fingerPrint;
                     },
-                    error -> Log.e(TAG, "RegisterDeviceRequestError is: " + error.toString())
+                    error -> {
+                        updateText("RegisterDeviceRequest Failed");
+                        Log.e(TAG, "RegisterDeviceRequestError is: " + error.toString());
+                    }
             );
             Log.i(TAG, "Trying to RegisterDevice");
             requestQueue.add(registerDeviceRequest);
         } catch (JSONException e) {
+            updateText("RegisterDeviceRequest Failed creating request body");
             Log.e(TAG,"Could not perform Register Device on startup.", e);
         }
     }
@@ -196,8 +203,9 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         if(sessionBearerToken != null & deviceFingerPrint != null) {
-            Log.i(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
+            Log.d(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
             if (beacons.size() != 0) {
+                detectedSignalsCount += beacons.size();
                 try {
                     JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
                     createAndSendPostRequest(signalsJsonArray);
@@ -206,6 +214,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     e.printStackTrace();
                 }
             }
+            updateText("Collected Signals Count: " + detectedSignalsCount);
         } else {
             Log.w(TAG, "!!! Did Range Beacons in Region: Count: " + beacons.size()
                     + " !!! But NOT collecting Data -> Waiting for LOGIN and DEVICE REGISTRATION response!" );
@@ -264,29 +273,23 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     public void onRanging(View view){
         Log.i(TAG, "Ranging BUtton is clicket");
         if(!currentlyRanging) {
-            RangeNotifier rangeNotifier = (beacons, region) -> {
-                if (beacons.size() > 0) {
-                    Log.i(TAG, "didRangeBeaconsInRegion called with beacon count:  " + beacons.size());
-                    Beacon firstBeacon = beacons.iterator().next();
-
-                    logToDisplay("The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.");
-                }
-            };
-            beaconManager.addRangeNotifier(rangeNotifier);
+            beaconManager.addRangeNotifier(this);
             beaconManager.startRangingBeacons(beaconRegion);
             currentlyRanging = true;
         } else{
             beaconManager.stopRangingBeacons(beaconRegion);
             beaconManager.removeAllRangeNotifiers();
             currentlyRanging = false;
+            updateText("Ranging Button clicket -> Ranging Paused");
         }
     }
     //
-    // Triggered when Monitoring Button is clicked
+    // Triggered when Monitoring Button is clicked -> unused
     @SuppressLint("SetTextI18n")
     public void onScan(View view) {
         Log.i(TAG, "monitoring button clicket");
         // This is a toggle.  Each time we tap it, we start or stop
+        /*
         Button button = findViewById(R.id.scanButton);
 
         if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
@@ -299,19 +302,8 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
             BeaconManager.getInstanceForApplication(this).startMonitoring(beaconRegion);
             button.setText("Disable Monitoring");
         }
+         */
 
-    }
-    // Called when at least one beacon in a Region is visible from Monitor Notifier
-    @Override
-    public void didEnterRegion(Region region) {
-        Log.i(TAG, "did enter region.");
-        insideRegion = true;
-
-        updateText("Beacon visible");
-        // start ranging for beacons.  This will provide an update once per second with the estimated
-        // distance to the beacon in the didRAngeBeaconsInRegion method.
-        beaconManager.startRangingBeacons(new Region("myRangingUniqueId", null, null, null));
-        beaconManager.addRangeNotifier(this);
     }
     //
     //
@@ -319,16 +311,6 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     // NOT USED CODE Overrides
     //
     // Called when no beacons in a Region are visible from MonitorNotifier
-    @Override
-    public void didExitRegion(Region region) {
-        Log.i(TAG, "did exit region.");
-        insideRegion = false;
-        updateText("Beacon not visible");
-    }
-    // Called with a state value when at least one or no beacons in a Region are visible from Monitor Notifier
-    @Override
-    public void didDetermineStateForRegion(int state, Region region) {
-    }
     //
     //
     //
@@ -434,7 +416,7 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
     }
     // Update the visibility text
     private void updateText(String line) {
-        Log.i(TAG, "updateText method Triggered -> changing monitoring");
+        //Log.i(TAG, "updateText method Triggered -> changing monitoring");
         runOnUiThread(() -> {
             TextView editText = MainActivity.this.findViewById(R.id.monitoringText);
             editText.setText(line);

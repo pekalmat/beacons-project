@@ -15,8 +15,8 @@ import java.util.List;
 public class BeaconsDataCsvExporter {
 
     private static final String OUT_FOLDER = "out//beacons//";
-    private static final String FLOOR_SUFFIX = "_floor";
-    private static final String CSV_FILE = "_.csv";
+    private static final String FLOOR_SUFFIX = "_floor_";
+    private static final String CSV_FILE = ".csv";
 
     private static final String SEMICOLON_COLUMN_DELIMITER = ";";
 
