@@ -20,6 +20,7 @@ public class BeaconsDataCsvExporter {
 
     private static final String SEMICOLON_COLUMN_DELIMITER = ";";
 
+    private static final String BEACON_ID = "beacon_id";
     private static final String MAJOR = "MAJOR";
     private static final String MINOR = "MINOR";
     private static final String NAME = "Name";
@@ -29,7 +30,7 @@ public class BeaconsDataCsvExporter {
     private static final String GEOPOSITION = "Geoposition";
     private static final String FLOOR = "floor";
     private static final String[] HEADERS = {
-            MAJOR, MINOR, NAME, GEOPOS, REGISTER_SOURCE, UID, GEOPOSITION, FLOOR
+            BEACON_ID, MAJOR, MINOR, NAME, GEOPOS, REGISTER_SOURCE, UID, GEOPOSITION, FLOOR
     };
 
     public void createBeaconsCsvFileOnePerFloorInOutFolderForOpenDataSoft(String filename, List<Beacon> beacons, String floor) {
@@ -39,6 +40,7 @@ public class BeaconsDataCsvExporter {
 
             for(Beacon beacon : beacons) {
                 csvPrinter.printRecord(
+                        beacon.getId(),
                         beacon.getMajor(),
                         beacon.getMinor(),
                         beacon.getName(),

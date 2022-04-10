@@ -1,6 +1,7 @@
 package ch.zhaw.integration.beacons.entities.position;
 
 import ch.zhaw.integration.beacons.entities.route.Route;
+import ch.zhaw.integration.beacons.entities.signal.Signal;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
@@ -39,6 +40,15 @@ public class Position implements Serializable, Comparable<Position>{
     private double yCoordinate;
 
     private Date positionTimestamp;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Signal signal1;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Signal signal2;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Signal signal3;
 
     public Long getId() {
         return id;
@@ -94,6 +104,30 @@ public class Position implements Serializable, Comparable<Position>{
 
     public void setPositionTimestamp(Date positionTimestamp) {
         this.positionTimestamp = positionTimestamp;
+    }
+
+    public Signal getSignal1() {
+        return signal1;
+    }
+
+    public void setSignal1(Signal signal1) {
+        this.signal1 = signal1;
+    }
+
+    public Signal getSignal2() {
+        return signal2;
+    }
+
+    public void setSignal2(Signal signal2) {
+        this.signal2 = signal2;
+    }
+
+    public Signal getSignal3() {
+        return signal3;
+    }
+
+    public void setSignal3(Signal signal3) {
+        this.signal3 = signal3;
     }
 
     @Override

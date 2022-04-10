@@ -26,6 +26,7 @@ public abstract class AbstractPositionCalculator {
         for (ImmutableTriple<Signal, Signal, Signal> position : positionSignals) {
             Position calculatedPosition = new Position();
             setFloorDetailsOnPosition(calculatedPosition, position);
+            setReferenceSignalsData(calculatedPosition, position);
 
             // calculate coordinates
             Pair<Double, Double> location1 = Pair.of(position.getLeft().getBeacon().getxCoordinate(), position.getLeft().getBeacon().getyCoordinate());
@@ -44,6 +45,12 @@ public abstract class AbstractPositionCalculator {
             positions.add(calculatedPosition);
         }
         return positions;
+    }
+
+    private void setReferenceSignalsData(Position calculatedPosition, ImmutableTriple<Signal, Signal, Signal> position) {
+        calculatedPosition.setSignal1(position.getLeft());
+        calculatedPosition.setSignal2(position.getMiddle());
+        calculatedPosition.setSignal3(position.getRight());
     }
 
 /*    // TODO: Optional check this Trilateration library

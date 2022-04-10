@@ -30,13 +30,24 @@ public class RouteDataCsvExporter {
     private static final String ROUTE_END_TIME = "route_end_time";
     private static final String DEVICE_FINGERPRINT = "device_fingerprint";
     private static final String GEO_SHAPE = "Geo Shape";
+    private static final String POSITION_TIMESTAMP = "position_timestamp";
+    private static final String POSITION_FLOOR_EST = "position_floor_estimation";
+    private static final String POSITION_SIGNALS_FLOORS = "position_signals_floors";
+    private static final String POSITION_SIGNAL1_BEACON = "position_signal_1_beacon";
+    private static final String POSITION_SIGNAL1_TIMESTAMP = "position_signal_1_timestamp";
+    private static final String POSITION_SIGNAL2_BEACON = "position_signal_2_beacon";
+    private static final String POSITION_SIGNAL2_TIMESTAMP = "position_signal_2_timestamp";
+    private static final String POSITION_SIGNAL3_BEACON = "position_signal_3_beacon";
+    private static final String POSITION_SIGNAL3_TIMESTAMP = "position_signal_3_timestamp";
     private static final String[] HEADERS_LINES = {
-            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEO_SHAPE
+            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEO_SHAPE, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
+            POSITION_SIGNAL1_BEACON, POSITION_SIGNAL1_TIMESTAMP, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL3_BEACON, POSITION_SIGNAL3_TIMESTAMP
     };
     private static final String GEOPOS = "geopos";
     private static final String GEOPOSITION = "Geoposition";
     private static final String[] HEADERS_POINTS = {
-            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEOPOS, GEOPOSITION
+            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEOPOS, GEOPOSITION, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
+            POSITION_SIGNAL1_BEACON, POSITION_SIGNAL1_TIMESTAMP, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL3_BEACON, POSITION_SIGNAL3_TIMESTAMP
     };
 
     public void createCsvPerRoute(List<Route> deviceRoutes, String type) {
@@ -46,7 +57,7 @@ public class RouteDataCsvExporter {
     }
 
     private void exportRouteToCsv(Route route, String type) {
-        String fileName = getOutFileName(route);
+        String fileName = getOutFileName(route, type);
         String outputFileName = OUT_FOLDER + fileName +  CSV_FILE;
         String[] headers = type != null && type.contains("line") ? HEADERS_LINES : HEADERS_POINTS;
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFileName));
@@ -75,7 +86,16 @@ public class RouteDataCsvExporter {
                     route.getRouteEnd().toString(),
                     route.getDevice().getFingerPrint(),
                     getGeopos(position),
-                    getGeoposition(position)
+                    getGeoposition(position),
+                    position.getPositionTimestamp(),
+                    position.getEstimatedFloor(),
+                    position.getFloors(),
+                    position.getSignal1().getBeacon().getId(),
+                    position.getSignal1().getSignalTimestamp().toString(),
+                    position.getSignal2().getBeacon().getId(),
+                    position.getSignal2().getSignalTimestamp().toString(),
+                    position.getSignal3().getBeacon().getId(),
+                    position.getSignal3().getSignalTimestamp().toString()
             );
         }
     }
@@ -103,7 +123,24 @@ public class RouteDataCsvExporter {
         // To Simplify we splitt each cell to contain max 100-GeoPoints instead of splitting by String Max Length
         List<List<Position>> partitions = createPartitions(route);
         for (List<Position> partition : partitions) {
-            printRecord(csvPrinter, route, partition);
+            csvPrinter.printRecord(
+                    route.getCalculationMethod().name(),
+                    route.getCalculationTriggerTime().toString(),
+                    route.getRouteStart().toString(),
+                    route.getRouteEnd().toString(),
+                    route.getDevice().getFingerPrint(),
+                    getGeoShapeJson(partition),
+                    partition.get(0).getPositionTimestamp(),
+                    partition.get(0).getEstimatedFloor(),
+                    partition.get(0).getFloors(),
+                    partition.get(0).getSignal1().getBeacon().getId(),
+                    partition.get(0).getSignal1().getSignalTimestamp().toString(),
+                    partition.get(0).getSignal2().getBeacon().getId(),
+                    partition.get(0).getSignal2().getSignalTimestamp().toString(),
+                    partition.get(0).getSignal3().getBeacon().getId(),
+                    partition.get(0).getSignal3().getSignalTimestamp().toString()
+
+            );
         }
 
     }
@@ -130,18 +167,6 @@ public class RouteDataCsvExporter {
         return connectedPartitions;
     }
 
-    private void printRecord(CSVPrinter csvPrinter, Route route, List<Position> partition) throws IOException {
-        String geoShape = getGeoShapeJson(partition);
-        csvPrinter.printRecord(
-                route.getCalculationMethod().name(),
-                route.getCalculationTriggerTime().toString(),
-                route.getRouteStart().toString(),
-                route.getRouteEnd().toString(),
-                route.getDevice().getFingerPrint(),
-                geoShape
-        );
-    }
-
     private String getGeoShapeJson(List<Position> positions) {
         // ensure positions are sorted by PositionTimestamp
         Collections.sort(positions);
@@ -162,12 +187,12 @@ public class RouteDataCsvExporter {
         return stringBuilder.toString();
     }
 
-    private String getOutFileName(Route route) {
+    private String getOutFileName(Route route, String type) {
         String calculationMethod = route.getCalculationMethod().name();
         String deviceFingerprint = route.getDevice().getBrand();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_-_HH_mm_ss_SSS");
         String routeStartTime = sdf.format(route.getRouteStart());
         String routeEndTime = sdf.format(route.getRouteEnd());
-        return calculationMethod + "_" + deviceFingerprint + "_" + routeStartTime + "-" + routeEndTime;
+        return type + "_" + calculationMethod + "_" + deviceFingerprint + "_" + routeStartTime + "-" + routeEndTime;
     }
 }
