@@ -17,7 +17,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -38,49 +37,86 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
+import static com.example.trackingapp.Constants.BEACON_REGION;
+import static com.example.trackingapp.Constants.COLLECTED_SIGNALS_COUNT;
+import static com.example.trackingapp.Constants.ERROR_LOGIN_FAILED;
+import static com.example.trackingapp.Constants.ERROR_LOGIN_FAILED_REQUEST_BODY;
+import static com.example.trackingapp.Constants.ERROR_LOGIN_HEADER_EXTRACTION;
+import static com.example.trackingapp.Constants.ERROR_REGISTER_DEVICE_FAILED;
+import static com.example.trackingapp.Constants.ERROR_REGISTER_DEVICE_REQUEST_BODY;
+import static com.example.trackingapp.Constants.ERROR_SIGNAL_POST_REQUEST;
+import static com.example.trackingapp.Constants.ERROR_SIGNAL_REQUEST_BODY;
+import static com.example.trackingapp.Constants.INITIALIZING_BEACON_SCANNER;
+import static com.example.trackingapp.Constants.LOGIN_IN_PROGRESS_STATUS;
+import static com.example.trackingapp.Constants.LOGIN_SUCCESSFUL;
+import static com.example.trackingapp.Constants.LOG_CLEAR_ERRORS_BUTTON_CLICKED;
+import static com.example.trackingapp.Constants.LOG_JSON_EXCEPTION;
+import static com.example.trackingapp.Constants.LOG_LOGIN_AUTH_HEADER_ERROR;
+import static com.example.trackingapp.Constants.LOG_LOGIN_ERROR;
+import static com.example.trackingapp.Constants.LOG_LOGIN_SUCCESSFUL;
+import static com.example.trackingapp.Constants.LOG_ON_CREATE;
+import static com.example.trackingapp.Constants.LOG_POST_REQUEST_ERROR;
+import static com.example.trackingapp.Constants.LOG_POST_REQUEST_RESPONSE;
+import static com.example.trackingapp.Constants.LOG_POST_SIGNAL_DATA_SUCCESSFUL;
+import static com.example.trackingapp.Constants.LOG_RANGED_BEACONS_COUNT;
+import static com.example.trackingapp.Constants.LOG_RANGING_BUTTON_CLICKED;
+import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_ERROR;
+import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_REQUEST_ERROR;
+import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_SUCCESSFUL;
+import static com.example.trackingapp.Constants.LOG_RETRY_LOGIN_BUTTON_CLICKED;
+import static com.example.trackingapp.Constants.LOG_SCANNER_SETUP;
+import static com.example.trackingapp.Constants.LOG_TRYING_LOGIN;
+import static com.example.trackingapp.Constants.LOG_TRYING_REGISTER_DEVICE;
+import static com.example.trackingapp.Constants.LOG_WARN_RANGING_BUT_NOT_COLLECTING;
+import static com.example.trackingapp.Constants.MOCK_LOGIN_REQUEST_URL;
+import static com.example.trackingapp.Constants.NO_ERRORS;
+import static com.example.trackingapp.Constants.PERMISSION_REQUEST_BACKGROUND_LOCATION;
+import static com.example.trackingapp.Constants.PERMISSION_REQUEST_FINE_LOCATION;
+import static com.example.trackingapp.Constants.POST_NEW_SIGNALS_REQUEST_URL;
+import static com.example.trackingapp.Constants.PUT_REGISTER_DEVICE_REQUEST_URL;
+import static com.example.trackingapp.Constants.RANGING_PAUSED_APP_STATUS;
+import static com.example.trackingapp.Constants.RANGING_RUNNING_APP_STATUS;
+import static com.example.trackingapp.Constants.RANGING_STARTED;
+import static com.example.trackingapp.Constants.REGISTER_DEVICE_SUCCESSFUL;
+import static com.example.trackingapp.Constants.RETRY_LOGIN;
+
 public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
 
     // Logger-TAG
     private static final String TAG =  "########## MainActivity ##########";
-    // Permissions
-    private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
-    private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
-    // REST-API
-    //private static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
-     private static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
-    private static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
-    private static final String PUT_REGISTER_DEVICE_REQUEST_URL = HOST + "/beacons/api/internal/devices";
-    private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/admins/login";
+
+    // API-Request
     private String sessionBearerToken;
     private RequestQueue requestQueue;
     private String deviceFingerPrint;
-    // RANGING-STATUS ON/OFF
-    private boolean currentlyRanging = false;
     // Beacon-Manager / Scanner
     private BeaconManager beaconManager;
-    private static Long detectedSignalsCount = Long.valueOf(0);
-    public static final Region beaconRegion = new Region("beaconRegion", null, null, null);
+    private static Long detectedSignalsCount = 0L;
+    // RANGING-STATUS ON/OFF
+    private boolean currentlyRanging = false;
+
     //
-    // APPLICATION_START_UP
     //
-    // onCreate Method triggered on Application Start-Up
+    // App-Init
+    //
+    //
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        Log.i(TAG, LOG_ON_CREATE);
         setContentView(R.layout.activity_main);
         verifyBluetooth();
         requestPermissions();
         requestQueue = Volley.newRequestQueue(this);
         // Mock a Login because of authorization check for data fetching/manipulation apis
-        updateText("Login in progress...");
+        updateApplicationStatusText(LOGIN_IN_PROGRESS_STATUS);
         requestMockLoginToGetBearerTokenAndRegisterDevice();
         // Setup beaconManager
         initializeBeaconManager();
     }
-    //setup BeaconScanner
-    private void initializeBeaconManager() {
-        beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
 
+    private void initializeBeaconManager() {
+        updateApplicationStatusText(INITIALIZING_BEACON_SCANNER);
+        beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
         // By default the AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
         // find a different type of beacon, you must specify the byte layout for that beacon's
         // advertisement with a line like below.  The example shows how to find a beacon with the
@@ -108,26 +144,19 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
         beaconManager.setEnableScheduledScanJobs(false);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setBackgroundScanPeriod(500);
+        beaconManager.setBackgroundScanPeriod(200);
         beaconManager.setForegroundBetweenScanPeriod(0);
-        beaconManager.setForegroundScanPeriod(500);
+        beaconManager.setForegroundScanPeriod(200);
 
-        Log.d(TAG, "setting up background monitoring in app onCreate");
-        /*beaconManager.addMonitorNotifier(this);*/
+        Log.i(TAG, LOG_SCANNER_SETUP);
 
         // If we were monitoring *different* regions on the last run of this app, they will be
         // remembered.  In this case we need to disable them here
         for (Region region: beaconManager.getMonitoredRegions()) {
             beaconManager.stopMonitoring(region);
         }
-
-        Log.d(TAG, "Started Monitoring");
-        beaconManager.startRangingBeacons(beaconRegion);
-        beaconManager.addRangeNotifier(this);
-        //beaconManager.startMonitoring(beaconRegion);
-        //beaconManager.addMonitorNotifier(this);
     }
-    // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
+
     private void requestMockLoginToGetBearerTokenAndRegisterDevice() {
         try {
             JSONObject jsonBody = new JSONObject()
@@ -139,31 +168,34 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                     null,
                     jsonBody,
                     response -> {
-                        Log.i(TAG, "MockLoginRequestResponse successful!");
+                        Log.i(TAG, LOG_LOGIN_SUCCESSFUL);
                         try {
                             JSONObject headers = (JSONObject) response.get("headers");
                             String bearerToken = (String) headers.get("Authorization");
                             sessionBearerToken = "Bearer " + bearerToken;
-                            updateText("Login succesfull -> Registering Device now...");
+                            updateApplicationStatusText(LOGIN_SUCCESSFUL);
                             requestRegisterDevice();
                         } catch (JSONException e) {
-                            updateText("Login failed - Could not extract Auth-Header from request response");
-                            Log.e(TAG, "Could not extract Authorization header from MockLoginRequest: error: " + e.getMessage());
+                            updateApplicationStatusText(ERROR_LOGIN_HEADER_EXTRACTION);
+                            logErrorToDisplay(e.toString());
+                            Log.e(TAG, LOG_LOGIN_AUTH_HEADER_ERROR + e);
                         }
                     },
                     error -> {
-                        updateText("Login Request Failed");
-                        Log.e(TAG, "MockLoginRequestError is: " + error.toString());
+                        updateApplicationStatusText(ERROR_LOGIN_FAILED);
+                        logErrorToDisplay(error.toString());
+                        Log.e(TAG, LOG_LOGIN_ERROR + error);
                     }
             );
-            Log.i(TAG, "Trying to MockLogin");
+            Log.i(TAG, LOG_TRYING_LOGIN);
             requestQueue.add(mockLoginRequest);
         } catch (JSONException e) {
-            updateText("Login Failed creating request body");
-            Log.e(TAG,"Could not perform Mock Login on startup.", e);
+            updateApplicationStatusText(ERROR_LOGIN_FAILED_REQUEST_BODY);
+            logErrorToDisplay(e.toString());
+            Log.e(TAG,ERROR_LOGIN_FAILED_REQUEST_BODY, e);
         }
     }
-    // Request Device
+
     private void requestRegisterDevice() {
         try {
             String fingerPrint = Build.FINGERPRINT;
@@ -179,49 +211,51 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                     sessionBearerToken,
                     jsonBody,
                     response -> {
-                        updateText("RegisterDeviceRequest successful");
-                        Log.i(TAG, "RegisterDeviceRequest successful!");
+                        updateApplicationStatusText(REGISTER_DEVICE_SUCCESSFUL);
+                        Log.i(TAG, LOG_REGISTER_DEVICE_SUCCESSFUL);
                         deviceFingerPrint = fingerPrint;
                     },
                     error -> {
-                        updateText("RegisterDeviceRequest Failed");
-                        Log.e(TAG, "RegisterDeviceRequestError is: " + error.toString());
+                        updateApplicationStatusText(ERROR_REGISTER_DEVICE_FAILED);
+                        logErrorToDisplay(error.toString());
+                        Log.e(TAG, LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
                     }
             );
-            Log.i(TAG, "Trying to RegisterDevice");
+            Log.i(TAG, LOG_TRYING_REGISTER_DEVICE);
             requestQueue.add(registerDeviceRequest);
         } catch (JSONException e) {
-            updateText("RegisterDeviceRequest Failed creating request body");
-            Log.e(TAG,"Could not perform Register Device on startup.", e);
+            updateApplicationStatusText(ERROR_REGISTER_DEVICE_REQUEST_BODY);
+            logErrorToDisplay(e.toString());
+            Log.e(TAG, LOG_REGISTER_DEVICE_ERROR, e);
         }
     }
+
     //
     //
-    //  MAIN-LOGIC
+    // Signal Data Collecting and Sending
     //
-    // Range Notifier -> Main Beacon-Tracking logic
+    //
+
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         if(sessionBearerToken != null & deviceFingerPrint != null) {
-            Log.d(TAG, "Did Range Beacons in Region: Count: " + beacons.size());
+            Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
             if (beacons.size() != 0) {
                 detectedSignalsCount += beacons.size();
                 try {
                     JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
-                    createAndSendPostRequest(signalsJsonArray);
+                    createAndSendSignalsPostRequest(signalsJsonArray);
                 } catch (JSONException e) {
-                    Log.e(TAG, "Error Creating RequestBody");
-                    e.printStackTrace();
+                    logErrorToDisplay(ERROR_SIGNAL_REQUEST_BODY);
+                    Log.e(TAG, LOG_JSON_EXCEPTION + e);
                 }
             }
-            updateText("Collected Signals Count: " + detectedSignalsCount);
+            logScannedSignalCountToDisplay();
         } else {
-            Log.w(TAG, "!!! Did Range Beacons in Region: Count: " + beacons.size()
-                    + " !!! But NOT collecting Data -> Waiting for LOGIN and DEVICE REGISTRATION response!" );
+            Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
         }
     }
-    //
-    // MAIN CODE HELPER-METHODS
+
     private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
         Date timestamp = Calendar.getInstance().getTime();
         @SuppressLint("SimpleDateFormat") String timestampString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'").format(timestamp);
@@ -247,76 +281,32 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         }
         return result;
     }
-    //
-    private void createAndSendPostRequest(JSONArray postRequestBody) {
-        // Create and POST Json-PostRequest
-        CustomJsonArrayRequest postNewTreatmentListRequest = new CustomJsonArrayRequest(
+
+    private void createAndSendSignalsPostRequest(JSONArray postRequestBody) {
+        CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
                 Request.Method.POST,
                 POST_NEW_SIGNALS_REQUEST_URL,
                 sessionBearerToken,
                 postRequestBody,
                 response -> {
                     // TODO: get new token and update session token
-                    Log.i(TAG, "PostRequestResponse is: " + response.toString());
+                    Log.i(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
                 },
-                error -> Log.e(TAG, "PostRequestError: " + error.toString())
+                error -> {
+                    logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
+                    Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
+                }
         );
-        Log.i(TAG, "Send Tracking Data to server: Number of collected Beacon-Signals:" + postRequestBody.length());
-        requestQueue.add(postNewTreatmentListRequest);
+        Log.i(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
+        requestQueue.add(postNewSignalsListRequest);
     }
-    //
-    //
-    //
-    // SCANNING / MONITORING START METHODS
-    //
-    // Triggered when Ranging Button is clicked
-    public void onRanging(View view){
-        Log.i(TAG, "Ranging BUtton is clicket");
-        if(!currentlyRanging) {
-            beaconManager.addRangeNotifier(this);
-            beaconManager.startRangingBeacons(beaconRegion);
-            currentlyRanging = true;
-        } else{
-            beaconManager.stopRangingBeacons(beaconRegion);
-            beaconManager.removeAllRangeNotifiers();
-            currentlyRanging = false;
-            updateText("Ranging Button clicket -> Ranging Paused");
-        }
-    }
-    //
-    // Triggered when Monitoring Button is clicked -> unused
-    @SuppressLint("SetTextI18n")
-    public void onScan(View view) {
-        Log.i(TAG, "monitoring button clicket");
-        // This is a toggle.  Each time we tap it, we start or stop
-        /*
-        Button button = findViewById(R.id.scanButton);
 
-        if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
-            BeaconManager.getInstanceForApplication(this).stopMonitoring(beaconRegion);
-            button.setText("Enable Monitoring");
-            updateText("Monitoring deactivated");
-        }
-        else {
-            updateText("Beacon not visible");
-            BeaconManager.getInstanceForApplication(this).startMonitoring(beaconRegion);
-            button.setText("Disable Monitoring");
-        }
-         */
+    //
+    //
+    // Bluetooth & Permissions
+    //
+    //
 
-    }
-    //
-    //
-    //
-    // NOT USED CODE Overrides
-    //
-    // Called when no beacons in a Region are visible from MonitorNotifier
-    //
-    //
-    //
-    //Bluetooth / Permissions / App-Display-Log-methods
-    //
-    // Override Method in FragmentActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -349,7 +339,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             }
         }
     }
-    // Request the location-permissions if not already granted
+
     private void requestPermissions() {
         if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -384,7 +374,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             }
         }
     }
-    // Check Bluetooth functionalities
+
     private void verifyBluetooth() {
         try {
             if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
@@ -406,20 +396,69 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         }
 
     }
-    // Log the Beacon Details to the Screen when Ranging
-    private void logToDisplay(String line) {
-        Log.i(TAG, "logToDisplay method Triggered -> changing rangingText");
+
+    //
+    //
+    // BUTTON-Listener Methods
+    //
+    //
+
+    public void startStopRangingButtonListener(View view){
+        Log.i(TAG, LOG_RANGING_BUTTON_CLICKED);
+        if(!currentlyRanging) {
+            beaconManager.addRangeNotifier(this);
+            beaconManager.startRangingBeacons(BEACON_REGION);
+            currentlyRanging = true;
+            updateApplicationStatusText(RANGING_RUNNING_APP_STATUS);
+            Log.i(TAG, RANGING_STARTED);
+
+        } else{
+            beaconManager.stopRangingBeacons(BEACON_REGION);
+            beaconManager.removeAllRangeNotifiers();
+            currentlyRanging = false;
+            updateApplicationStatusText(RANGING_PAUSED_APP_STATUS);
+        }
+    }
+
+    public void retryLoginButtonListener(View view) {
+        Log.i(TAG, LOG_RETRY_LOGIN_BUTTON_CLICKED);
+        updateApplicationStatusText(RETRY_LOGIN);
+        requestMockLoginToGetBearerTokenAndRegisterDevice();
+    }
+
+    public void clearErrorLogButtonListener(View view) {
+        Log.i(TAG, LOG_CLEAR_ERRORS_BUTTON_CLICKED);
         runOnUiThread(() -> {
-            TextView editText = MainActivity.this.findViewById(R.id.rangingText);
+            TextView errorLog = MainActivity.this.findViewById(R.id.errorLog);
+            errorLog.setText(NO_ERRORS);
+        });
+    }
+
+    //
+    //
+    // UI-Text-Update methods
+    //
+    //
+
+    private void updateApplicationStatusText(String line) {
+        runOnUiThread(() -> {
+            TextView editText = MainActivity.this.findViewById(R.id.applicationStatus);
             editText.setText(line);
         });
     }
-    // Update the visibility text
-    private void updateText(String line) {
-        //Log.i(TAG, "updateText method Triggered -> changing monitoring");
+
+    private void logScannedSignalCountToDisplay() {
         runOnUiThread(() -> {
-            TextView editText = MainActivity.this.findViewById(R.id.monitoringText);
-            editText.setText(line);
+            TextView editText = MainActivity.this.findViewById(R.id.collectedSignalCount);
+            String countLogText = COLLECTED_SIGNALS_COUNT + detectedSignalsCount;
+            editText.setText(countLogText);
+        });
+    }
+
+    private void logErrorToDisplay(String errorMessage) {
+        runOnUiThread(() -> {
+            TextView errorLog = MainActivity.this.findViewById(R.id.errorLog);
+            errorLog.setText(errorMessage);
         });
     }
 
