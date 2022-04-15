@@ -41,6 +41,7 @@ public class SignalRestController implements ApiRestController {
         return new ResponseEntity<>(newSignalDtoList, HttpStatus.OK);
     }
 
+
     /**
      *  API to trigger Signal-Data-Backup import
      *
@@ -55,6 +56,22 @@ public class SignalRestController implements ApiRestController {
         List<SignalDto> newSignalDtoList = signalService.importBackupFromCsv(resourceFilePath);
         LOGGER.info("Persisted new Signal: count: " + newSignalDtoList.size());
         return new ResponseEntity<>(newSignalDtoList, HttpStatus.OK);
+    }
+
+    /**
+     *  API for matching/connecting detected beacon-signals with the existing sbb beacons
+     *
+     *  @url:           "<host>"/beacons/api/internal/signals/match_beacons
+     *  @method:        POST
+     *  @body-param:    none
+     *  @returns:       HttpStatus = 200, JSON-Array of matched signals
+     *
+     * */
+    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/match_beacons", method = RequestMethod.POST)
+    public ResponseEntity<List<SignalDto>> matchSignalsWithBeacons() {
+        List<SignalDto> matchedSignals = signalService.matchSignalsWithBeacons();
+        LOGGER.info("Matched Signals: count: " + matchedSignals.size());
+        return new ResponseEntity<>(matchedSignals, HttpStatus.OK);
     }
 
 }

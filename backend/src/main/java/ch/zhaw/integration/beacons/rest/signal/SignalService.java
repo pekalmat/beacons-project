@@ -6,6 +6,7 @@ import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.entities.signal.SignalDto;
 import ch.zhaw.integration.beacons.entities.signal.SignalRepository;
 import ch.zhaw.integration.beacons.entities.signal.SignalToSignalDtoMapper;
+import ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing.TrilaterationSignalPreprocessor;
 import ch.zhaw.integration.beacons.rest.signal.importer.SignalBackupDataImporter;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Component;
@@ -20,14 +21,17 @@ public class SignalService {
     private final DeviceRepository deviceRepository;
     private final SignalBackupDataImporter signalBackupDataImporter;
     private final SignalToSignalDtoMapper signalMapper;
+    private final TrilaterationSignalPreprocessor trilaterationSignalPreprocessor;
 
     public SignalService(
             SignalRepository signalRepository,
             DeviceRepository deviceRepository,
-            SignalBackupDataImporter signalBackupDataImporter) {
+            SignalBackupDataImporter signalBackupDataImporter,
+            TrilaterationSignalPreprocessor trilaterationSignalPreprocessor) {
         this.signalRepository = signalRepository;
         this.deviceRepository = deviceRepository;
         this.signalBackupDataImporter = signalBackupDataImporter;
+        this.trilaterationSignalPreprocessor = trilaterationSignalPreprocessor;
         this.signalMapper = Mappers.getMapper(SignalToSignalDtoMapper.class);
     }
 
@@ -46,5 +50,11 @@ public class SignalService {
     List<SignalDto> importBackupFromCsv(String resourceFilePath) {
         List<Signal> signals = signalBackupDataImporter.importBackupFromCsv(resourceFilePath);
         return signalMapper.mapSignalListToSignalDtoList(signals);
+    }
+
+    List<SignalDto> matchSignalsWithBeacons() {
+        List<Signal> signals = signalRepository.findAll();
+        List<Signal> connectedSignals = trilaterationSignalPreprocessor.connectSignalsWithKnownSbbBeacons(signals);
+        return signalMapper.mapSignalListToSignalDtoList(connectedSignals);
     }
 }

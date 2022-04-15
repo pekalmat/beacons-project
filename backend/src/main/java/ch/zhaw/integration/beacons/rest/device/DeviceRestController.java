@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class DeviceRestController implements ApiRestController {
 
@@ -39,6 +41,22 @@ public class DeviceRestController implements ApiRestController {
         DeviceDto newDeviceDto = deviceService.createDevice(deviceDto);
        LOGGER.info("registerDevice-Api requested - POST " + INTERNAL_DEVICES_PATH + " , ResponseStatus: " +  HttpStatus.OK);
         return new ResponseEntity<>(newDeviceDto, HttpStatus.OK);
+    }
+
+    /**
+     *  API to trigger Device-Data-Backup import
+     *
+     *  @url:           "<host>"/beacons/api/internal/devices/import_backup
+     *  @method:        POST
+     *  @body-param:    resourceFilePath: String (point to file in resources eg.: backup/xxx.csv
+     *  @returns:       HttpStatus = 200, JSON-Array of imported devices
+     *
+     * */
+    @RequestMapping(value =  INTERNAL_DEVICES_PATH + "/import_backup", method = RequestMethod.POST)
+    public ResponseEntity<List<DeviceDto>> triggerImportBackupFromCsv(@RequestBody String resourceFilePath) {
+        List<DeviceDto> newDevicesDtoList = deviceService.importBackupFromCsv(resourceFilePath);
+        LOGGER.info("Persisted new Devices: count: " + newDevicesDtoList.size());
+        return new ResponseEntity<>(newDevicesDtoList, HttpStatus.OK);
     }
 
 }

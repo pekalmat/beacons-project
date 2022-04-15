@@ -40,7 +40,7 @@ public class TrilaterationSignalPreprocessor {
         }
     }
 
-    private List<Signal> connectSignalsWithKnownSbbBeacons(List<Signal> signals) {
+    public List<Signal> connectSignalsWithKnownSbbBeacons(List<Signal> signals) {
         List<Signal> matchedSignals = new ArrayList<>();
         for(Signal signal : signals) {
             Beacon matchingBeacon = beaconRepository.findBeaconByMajorAndMinor(signal.getMajor(), signal.getMinor());
