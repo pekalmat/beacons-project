@@ -50,6 +50,7 @@ import static com.example.trackingapp.Constants.INITIALIZING_BEACON_SCANNER;
 import static com.example.trackingapp.Constants.LOGIN_IN_PROGRESS_STATUS;
 import static com.example.trackingapp.Constants.LOGIN_SUCCESSFUL;
 import static com.example.trackingapp.Constants.LOG_CLEAR_ERRORS_BUTTON_CLICKED;
+import static com.example.trackingapp.Constants.LOG_INCREASE_SCAN_RATE_BUTTON_CLICKED;
 import static com.example.trackingapp.Constants.LOG_JSON_EXCEPTION;
 import static com.example.trackingapp.Constants.LOG_LOGIN_AUTH_HEADER_ERROR;
 import static com.example.trackingapp.Constants.LOG_LOGIN_ERROR;
@@ -79,6 +80,7 @@ import static com.example.trackingapp.Constants.RANGING_RUNNING_APP_STATUS;
 import static com.example.trackingapp.Constants.RANGING_STARTED;
 import static com.example.trackingapp.Constants.REGISTER_DEVICE_SUCCESSFUL;
 import static com.example.trackingapp.Constants.RETRY_LOGIN;
+import static com.example.trackingapp.Constants.SCAN_RATE_CHANGED_TO;
 
 public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
 
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     // Beacon-Manager / Scanner
     private BeaconManager beaconManager;
     private static Long detectedSignalsCount = 0L;
+    private long beaconManagerScanPeriod = 100;
     // RANGING-STATUS ON/OFF
     private boolean currentlyRanging = false;
 
@@ -125,9 +128,18 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         // including the quotes.
         //cut out (,d:25-25)
         beaconManager.getBeaconParsers().clear();
-        //iBeacon Layout = ("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24")));
 
+        // add BeaconParser for     //      IBEACON             "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24")));
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")));
+        // add BeaconParser for     //      ALTBEACON           "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  UID      "s:0-1=feaa,m:2-2=00,p:3-3:-41,i:4-13,i:14-19"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  TLM      "x,s:0-1=feaa,m:2-2=20,d:3-3,d:4-5,d:6-7,d:8-11,d:12-15"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_TLM_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  URL      "s:0-1=feaa,m:2-2=10,p:3-3:-41,i:4-20v"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         BeaconManager.setDebug(false);
 
         Notification.Builder builder = new Notification.Builder(this);
@@ -144,9 +156,9 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
         beaconManager.setEnableScheduledScanJobs(false);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setBackgroundScanPeriod(200);
+        beaconManager.setBackgroundScanPeriod(beaconManagerScanPeriod);
         beaconManager.setForegroundBetweenScanPeriod(0);
-        beaconManager.setForegroundScanPeriod(200);
+        beaconManager.setForegroundScanPeriod(beaconManagerScanPeriod);
 
         Log.i(TAG, LOG_SCANNER_SETUP);
 
@@ -239,7 +251,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         if(sessionBearerToken != null & deviceFingerPrint != null) {
-            Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
+            //Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
             if (beacons.size() != 0) {
                 detectedSignalsCount += beacons.size();
                 try {
@@ -290,14 +302,14 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                 postRequestBody,
                 response -> {
                     // TODO: get new token and update session token
-                    Log.i(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
+                    //Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
                 },
                 error -> {
                     logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
                     Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
                 }
         );
-        Log.i(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
+        //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
         requestQueue.add(postNewSignalsListRequest);
     }
 
@@ -403,6 +415,18 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     //
     //
 
+    public void increaseScanRateButtonListener(View view) {
+        Log.i(TAG, LOG_INCREASE_SCAN_RATE_BUTTON_CLICKED);
+        if (beaconManagerScanPeriod < 1000) {
+            beaconManagerScanPeriod = beaconManagerScanPeriod + 100;
+        } else {
+            beaconManagerScanPeriod = 100;
+        }
+        updateCurrentScanningRateTest(String.valueOf(beaconManagerScanPeriod));
+        initializeBeaconManager();
+        updateApplicationStatusText(SCAN_RATE_CHANGED_TO + String.valueOf(beaconManagerScanPeriod));
+    }
+
     public void startStopRangingButtonListener(View view){
         Log.i(TAG, LOG_RANGING_BUTTON_CLICKED);
         if(!currentlyRanging) {
@@ -439,6 +463,13 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     // UI-Text-Update methods
     //
     //
+
+    private void updateCurrentScanningRateTest(String currentRate) {
+        runOnUiThread(() -> {
+            TextView editText = MainActivity.this.findViewById(R.id.currentScanningRate);
+            editText.setText(currentRate);
+        });
+    }
 
     private void updateApplicationStatusText(String line) {
         runOnUiThread(() -> {

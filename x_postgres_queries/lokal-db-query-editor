@@ -4,7 +4,7 @@ CREATE SCHEMA public;
 --
 --
 -- Test Daten/Signale für Berechnung Testing --
-insert into public.device(id,finger_print,manufacturer,brand,model,sdk) values (1, 'OnePlus/Nord_EEA/Nord:11/RP1A.201005.001/2203101723:user/release-keys', 'OnePlus', 'OnePlus', 'Nord', 30);
+insert into public.device(id,finger_print,manufacturer,brand,model,sdk) values (1, 'OnePlus/Nord_EEA/Nord:11/RP1A.201005.001/2203101723:user/release-keys', 'OnePlus', 'OnePlus', 'AC2003', 30);
 insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (1, (SELECT CURRENT_DATE),'47048.63762','47048', '63762', -69, -80, 3.5, 1);
 insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (2, (SELECT CURRENT_DATE),'45988.40746','45988', '40746', -69, -80, 3.5, 1);
 insert into public.signal(id,signal_timestamp,uuid,major,minor,tx_power,rssi,distance, device_id) values (3, (SELECT CURRENT_DATE),'44576.4548','44576', '45480', -69, -80, 3.5, 1);
@@ -14,18 +14,27 @@ id	signal_timestamp	uuid		major	minor	txPower	rssi	distance	CALCULATED DISTANCE
 3	04.04.2022			44576.4548	44576	45480	-69		-80		3.5			3.548133892
 --
 --
-select * from public.beacon;
+select count(*) from public.beacon;
 select * from public.device;
 select * from public.person;
-select * from public.position;
-select * from public.signal;
+select * from public.signal  where beacon_id is not null order by id desc ;
+select count(*) from public.signal;
 select * from public.route;
+select * from public.position where route_id = 21;
 
+
+select count(*) from public.signal where beacon_id is null;
+select count(*) from public.signal where beacon_id is not null;
+
+select * from public.beacon where major like '1';
+select count(*) from public.beacon;
 select count(*) from public.beacon;
 
 DELETE FROM public.device;
 DELETE FROM public.position;
+DELETE FROM public.route;
 DELETE FROM public.signal;
+DELETE from public.beacon;
 
 select * from public.beacon where floor like '-3';
 select count(*) from public.beacon where floor like '0';
@@ -35,3 +44,52 @@ links: "47.3777970882, 8.53906238235" Floor: -2
 rechts: "47.3777909, 8.5391352" Floor: -2
 neue Koordinaten für Tracking Punkte: (floor: -2)
 	"47.377789, 8.539134"
+	
+
+-- BEACONS of CALCULATED POSITION
+select * from public.beacon where id in (2268, 2343, 2408);	
+-- SIGNALS of CALCULATED POSITION
+select * from public.signal where id in (4555, 4557, 4558);
+-- RESULTING POSITION CALCULATED
+	-- before any new changes to the calculation
+	select * from public.position where route_id = 27;
+	-- after first changes to the calculation
+	select * from public.position where route_id = 28;	
+
+--- investigation
+select * from public.beacon;
+select signal.id, signal.signal_timestamp, signal.major, signal.minor, signal.bluetooth_name, signal.tx_power, signal.rssi, signal.running_average_rssi, signal.distance, signal.beacon_id,
+		beacon.floor, beacon.x_coordinate, beacon.x_coordinate
+	from public.signal 
+	INNER JOIN public.beacon
+		ON beacon.id = signal.beacon_id
+	where beacon.floor like '-2'
+	order by signal_timestamp;
+		
+	where beacon_id is not null 
+	order by signal_timestamp asc;
+	
+	
+select count(*) from public.signal where major like '0';
+
+--- investigation 2
+select * from public.signal order by signal_timestamp desc;
+-- signale testlauf 2 mit 200Milliseconds Scanrate -> 2223 Signale -> davon 1097 Beaconsignale 
+select signal_timestamp, distance, calculated_distance, beacon_id from public.signal where signal_timestamp >= '2022-04-13 18:38:00' and signal_timestamp <= '2022-04-13 19:10:00' and beacon_id is not null order by signal_timestamp asc;
+-- signale testlauf 2 mit 500Milliseconds Scanrate -> 2112 Signale -> davon 1255 Beaconsignale
+select signal_timestamp, distance, beacon_id from public.signal where signal_timestamp >= '2022-04-13 19:10:00' and signal_timestamp <= '2022-04-13 19:30:00' and beacon_id is not null order by signal_timestamp asc;
+
+	○ Lauf 1 (200 miliseconds-scan):
+		○ Bis 19:10
+	○ Lauf 2 (500 milliseconds-scan)
+		○ Bis 19:30 UG-2
+		Ab 19:30 EG
+
+SELECT * 
+FROM reservations 
+WHERE arrival >= '2012-01-01'
+AND arrival < '2013-01-01'
+   ;
+   
+   
+select * from public.signal order by id desc;

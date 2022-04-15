@@ -7,6 +7,18 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/currentScanningRate"
+        android:layout_width="87dp"
+        android:layout_height="19dp"
+        android:text="not Initialized"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.296"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loginButton"
+        app:layout_constraintVertical_bias="0.076" />
+
+    <TextView
         android:id="@+id/errorLog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -46,6 +58,20 @@
         app:layout_constraintVertical_bias="0.056" />
 
     <Button
+        android:id="@+id/increaseScanRateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="299dp"
+        android:onClick="increaseScanRateButtonListener"
+        android:text="Increase Scan-Rate"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.434"
+        app:layout_constraintStart_toEndOf="@+id/currentScanningRate"
+        app:layout_constraintTop_toBottomOf="@+id/loginButton"
+        app:layout_constraintVertical_bias="0.114" />
+
+    <Button
         android:id="@+id/clearErrorLogButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -65,13 +91,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="154dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="36dp"
         android:layout_marginEnd="155dp"
         android:onClick="startStopRangingButtonListener"
         android:text="Start/Stop Scanning"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginButton" />
+        app:layout_constraintTop_toBottomOf="@+id/increaseScanRateButton" />
 
     <TextView
         android:id="@+id/collectedSignalCount"

@@ -1,5 +1,18 @@
-SELECT * FROM public.beacon;
+--SELECT * FROM public.beacon;
+--select * FROM public.device;
+--select * from public.person;
+--select * from public.position;
+--select * from public.route;
+--select * from public.signal;
+--select count(*) from public.beacon;
 
-select count(*) from public.beacon;
+--DELETE from public.beacon;
+-- select * from public.signal order by id asc;
+--select count(*) from public.signal;
+--select id, signal_timestamp, distance from public.signal order by id desc;
+--DELETE from public.signal;
+--select count(*) from public.signal;
 
-DELETE from public.beacon;
+select * from public.device;
+
+select * from public.signal;

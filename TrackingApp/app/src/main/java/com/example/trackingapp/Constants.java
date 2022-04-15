@@ -46,6 +46,7 @@ public abstract class Constants {
     public static final String NO_ERRORS = "---NoErrors...";
     public static final String RETRY_LOGIN= "Retrying to Login";
     public static final String COLLECTED_SIGNALS_COUNT = "Collected Signals Count: ";
+    public static final String SCAN_RATE_CHANGED_TO = "Scanning Rate changed to milliseconds: ";
 
     //
     // Logs
@@ -67,6 +68,7 @@ public abstract class Constants {
     public static final String LOG_LOGIN_ERROR = "MockLoginRequestError is: ";
     public static final String LOG_LOGIN_AUTH_HEADER_ERROR = "Could not extract Authorization header from MockLoginRequest: error: ";
     public static final String LOG_LOGIN_SUCCESSFUL = "MockLoginRequestResponse successful!";
+    public static final String LOG_INCREASE_SCAN_RATE_BUTTON_CLICKED = "IncreaseScanRateButton Clicked";
 
 
 }
