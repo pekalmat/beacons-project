@@ -22,72 +22,29 @@ import android.widget.TextView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.example.trackingapp.requests.CustomJsonArrayRequest;
+import com.example.trackingapp.requests.CustomJsonObjectRequest;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.apache.commons.collections4.ListUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-import io.sentry.ISpan;
 import io.sentry.ITransaction;
 import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 
-import static com.example.trackingapp.Constants.BEACON_REGION;
-import static com.example.trackingapp.Constants.COLLECTED_SIGNALS_COUNT;
-import static com.example.trackingapp.Constants.ERROR_LOGIN_FAILED;
-import static com.example.trackingapp.Constants.ERROR_LOGIN_FAILED_REQUEST_BODY;
-import static com.example.trackingapp.Constants.ERROR_LOGIN_HEADER_EXTRACTION;
-import static com.example.trackingapp.Constants.ERROR_REGISTER_DEVICE_FAILED;
-import static com.example.trackingapp.Constants.ERROR_REGISTER_DEVICE_REQUEST_BODY;
-import static com.example.trackingapp.Constants.ERROR_SIGNAL_POST_REQUEST;
-import static com.example.trackingapp.Constants.ERROR_SIGNAL_REQUEST_BODY;
-import static com.example.trackingapp.Constants.INITIALIZING_BEACON_SCANNER;
-import static com.example.trackingapp.Constants.LOGIN_IN_PROGRESS_STATUS;
-import static com.example.trackingapp.Constants.LOGIN_SUCCESSFUL;
-import static com.example.trackingapp.Constants.LOG_CLEAR_ERRORS_BUTTON_CLICKED;
-import static com.example.trackingapp.Constants.LOG_INCREASE_SCAN_RATE_BUTTON_CLICKED;
-import static com.example.trackingapp.Constants.LOG_JSON_EXCEPTION;
-import static com.example.trackingapp.Constants.LOG_LOGIN_AUTH_HEADER_ERROR;
-import static com.example.trackingapp.Constants.LOG_LOGIN_ERROR;
-import static com.example.trackingapp.Constants.LOG_LOGIN_SUCCESSFUL;
-import static com.example.trackingapp.Constants.LOG_ON_CREATE;
-import static com.example.trackingapp.Constants.LOG_POST_REQUEST_ERROR;
-import static com.example.trackingapp.Constants.LOG_POST_REQUEST_RESPONSE;
-import static com.example.trackingapp.Constants.LOG_POST_SIGNAL_DATA_SUCCESSFUL;
-import static com.example.trackingapp.Constants.LOG_RANGED_BEACONS_COUNT;
-import static com.example.trackingapp.Constants.LOG_RANGING_BUTTON_CLICKED;
-import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_ERROR;
-import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_REQUEST_ERROR;
-import static com.example.trackingapp.Constants.LOG_REGISTER_DEVICE_SUCCESSFUL;
-import static com.example.trackingapp.Constants.LOG_RETRY_LOGIN_BUTTON_CLICKED;
-import static com.example.trackingapp.Constants.LOG_SCANNER_SETUP;
-import static com.example.trackingapp.Constants.LOG_TRYING_LOGIN;
-import static com.example.trackingapp.Constants.LOG_TRYING_REGISTER_DEVICE;
-import static com.example.trackingapp.Constants.LOG_WARN_RANGING_BUT_NOT_COLLECTING;
-import static com.example.trackingapp.Constants.MOCK_LOGIN_REQUEST_URL;
-import static com.example.trackingapp.Constants.NO_ERRORS;
-import static com.example.trackingapp.Constants.PERMISSION_REQUEST_BACKGROUND_LOCATION;
-import static com.example.trackingapp.Constants.PERMISSION_REQUEST_FINE_LOCATION;
-import static com.example.trackingapp.Constants.POST_NEW_SIGNALS_REQUEST_URL;
-import static com.example.trackingapp.Constants.PUT_REGISTER_DEVICE_REQUEST_URL;
-import static com.example.trackingapp.Constants.RANGING_PAUSED_APP_STATUS;
-import static com.example.trackingapp.Constants.RANGING_RUNNING_APP_STATUS;
-import static com.example.trackingapp.Constants.RANGING_STARTED;
-import static com.example.trackingapp.Constants.REGISTER_DEVICE_SUCCESSFUL;
-import static com.example.trackingapp.Constants.RETRY_LOGIN;
-import static com.example.trackingapp.Constants.SCAN_RATE_CHANGED_TO;
+import static com.example.trackingapp.constants.Constants.*;
 
 public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
 
@@ -100,13 +57,13 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     private String deviceFingerPrint;
     // Beacon-Manager / Scanner
     private BeaconManager beaconManager;
-    private static Long detectedSignalsCount = 0L;
-    private long beaconManagerScanPeriod = 100;
+    private static Long detectedSignalsCount;
+    private long beaconManagerScanPeriod;
     // RANGING-STATUS ON/OFF
-    private boolean currentlyRanging = false;
+    private boolean currentlyRanging;
     //
     private SimpleDateFormat dateFormat;
-    private List<JSONObject> collectedSignalsCache = new ArrayList<>();
+
     //
     //
     // App-Init
@@ -117,14 +74,21 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         super.onCreate(savedInstanceState);
         Log.i(TAG, LOG_ON_CREATE);
         setContentView(R.layout.activity_main);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'");
         createDefaultUncaughtExceptionHandler();
+
+        detectedSignalsCount = 0L;
+        beaconManagerScanPeriod = 100;
+        currentlyRanging = false;
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'");
+        requestQueue = Volley.newRequestQueue(this);
+
         verifyBluetooth();
         requestPermissions();
-        requestQueue = Volley.newRequestQueue(this);
+
         // Mock a Login because of authorization check for data fetching/manipulation apis
         updateApplicationStatusText(LOGIN_IN_PROGRESS_STATUS);
         requestMockLoginToGetBearerTokenAndRegisterDevice();
+
         // Setup beaconManager
         initializeBeaconManager();
     }
@@ -132,12 +96,8 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     private void createDefaultUncaughtExceptionHandler() {
         // https://stackoverflow.com/questions/27829955/android-handle-application-crash-and-start-a-particular-activity
         Thread.setDefaultUncaughtExceptionHandler(
-                new Thread.UncaughtExceptionHandler() {
-                    @Override
-                    public void uncaughtException (Thread thread, Throwable e) {
-                        Sentry.captureMessage("UncaughtExceptionFound:" + e);
-                    }
-                });
+                (thread, e) -> Sentry.captureMessage("UncaughtExceptionFound:" + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR)
+        );
     }
 
     private void initializeBeaconManager() {
@@ -214,14 +174,14 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                             updateApplicationStatusText(ERROR_LOGIN_HEADER_EXTRACTION);
                             logErrorToDisplay(e.toString());
                             Log.e(TAG, LOG_LOGIN_AUTH_HEADER_ERROR + e);
-                            Sentry.captureMessage(LOG_LOGIN_AUTH_HEADER_ERROR + e);
+                            Sentry.captureMessage(LOG_LOGIN_AUTH_HEADER_ERROR + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
                         }
                     },
                     error -> {
                         updateApplicationStatusText(ERROR_LOGIN_FAILED);
                         logErrorToDisplay(error.toString());
                         Log.e(TAG, LOG_LOGIN_ERROR + error);
-                        Sentry.captureMessage(LOG_LOGIN_ERROR + error);
+                        Sentry.captureMessage(LOG_LOGIN_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
                     }
             );
             Log.i(TAG, LOG_TRYING_LOGIN);
@@ -230,7 +190,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             updateApplicationStatusText(ERROR_LOGIN_FAILED_REQUEST_BODY);
             logErrorToDisplay(e.toString());
             Log.e(TAG,ERROR_LOGIN_FAILED_REQUEST_BODY, e);
-            Sentry.captureMessage(ERROR_LOGIN_FAILED_REQUEST_BODY + e);
+            Sentry.captureMessage(ERROR_LOGIN_FAILED_REQUEST_BODY + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
         }
     }
 
@@ -257,7 +217,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                         updateApplicationStatusText(ERROR_REGISTER_DEVICE_FAILED);
                         logErrorToDisplay(error.toString());
                         //Log.e(TAG, LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
-                        Sentry.captureMessage(LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
+                        Sentry.captureMessage(LOG_REGISTER_DEVICE_REQUEST_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
                     }
             );
             Log.i(TAG, LOG_TRYING_REGISTER_DEVICE);
@@ -266,7 +226,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             updateApplicationStatusText(ERROR_REGISTER_DEVICE_REQUEST_BODY);
             logErrorToDisplay(e.toString());
             //Log.e(TAG, LOG_REGISTER_DEVICE_ERROR, e);
-            Sentry.captureMessage(LOG_REGISTER_DEVICE_ERROR + e);
+            Sentry.captureMessage(LOG_REGISTER_DEVICE_ERROR + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
 
         }
     }
@@ -280,46 +240,79 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
         ITransaction sentryTransaction = Sentry.startTransaction("rangNotifierTransaction", "collectingSignals");
-        if(sessionBearerToken != null & deviceFingerPrint != null) {
-            //Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
-            if (beacons.size() != 0) {
-                detectedSignalsCount += beacons.size();
-                try {
-                    collectAllBeaconSignalsAndConvertToJsonArray(beacons);
-                } catch (JSONException e) {
-                    logErrorToDisplay(ERROR_SIGNAL_REQUEST_BODY);
-                    //Log.e(TAG, LOG_JSON_EXCEPTION + e);
-                    Sentry.captureMessage(LOG_JSON_EXCEPTION + e);
-                }
-            }
-        } else {
-            Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
-        }
+        Date detectionTimestamp = Calendar.getInstance().getTime();
+        processBeaconSignalsAsynchronously(beacons, detectionTimestamp);
+        logScannedSignalCountToDisplay();
         sentryTransaction.finish();
     }
 
-    private void collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
-        Date timestamp = Calendar.getInstance().getTime();
-        String timestampString = dateFormat.format(timestamp);
+    private void processBeaconSignalsAsynchronously(Collection<Beacon> beacons, Date detectionTimestamp) {
+        String signalTimestampString = dateFormat.format(detectionTimestamp);
+        new Thread(() -> {
+            if (sessionBearerToken != null & deviceFingerPrint != null) {
+                //Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
+                if (beacons.size() != 0) {
+                    detectedSignalsCount += beacons.size();
+                    collectAndSendSignals(beacons, signalTimestampString);
+                    logScannedSignalCountToDisplay();
+                }
+            } else {
+                Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
+            }
+        }).start();
+    }
+
+    private void collectAndSendSignals(Collection<Beacon> beacons, String signalTimestampString) {
+        JSONArray jsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons, signalTimestampString);
+        createAndSendSignalsPostRequest(jsonArray);
+    }
+
+    private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons, String signalTimestampString) {
+        JSONArray result = new JSONArray();
         for (Beacon beacon: beacons) {
             // Collect all Beacon Signals and create JsonString for Each
-            JSONObject beaconSignalJson = new JSONObject()
-                    .put("signalTimestamp", timestampString)
-                    .put("serviceUuid", beacon.getServiceUuid())
-                    .put("uuid", beacon.getId1().toString())
-                    .put("major", beacon.getId2().toString())
-                    .put("minor", beacon.getId3().toString())
-                    .put("bluetoothAddress", beacon.getBluetoothAddress())
-                    .put("bluetoothName", beacon.getBluetoothName())
-                    .put("beaconTypeCode", beacon.getBeaconTypeCode())
-                    .put("parserIdentifier", beacon.getParserIdentifier())
-                    .put("txPower", beacon.getTxPower())
-                    .put("rssi", beacon.getRssi())
-                    .put("runningAverageRssi", beacon.getRunningAverageRssi())
-                    .put("distance", beacon.getDistance())
-                    .put("deviceFingerPrint", deviceFingerPrint);
-            collectedSignalsCache.add(beaconSignalJson);
+            try {
+                JSONObject beaconSignalJson = new JSONObject()
+                        .put("signalTimestamp", signalTimestampString)
+                        .put("serviceUuid", beacon.getServiceUuid())
+                        .put("uuid", beacon.getId1().toString())
+                        .put("major", beacon.getId2().toString())
+                        .put("minor", beacon.getId3().toString())
+                        .put("bluetoothAddress", beacon.getBluetoothAddress())
+                        .put("bluetoothName", beacon.getBluetoothName())
+                        .put("beaconTypeCode", beacon.getBeaconTypeCode())
+                        .put("parserIdentifier", beacon.getParserIdentifier())
+                        .put("txPower", beacon.getTxPower())
+                        .put("rssi", beacon.getRssi())
+                        .put("runningAverageRssi", beacon.getRunningAverageRssi())
+                        .put("distance", beacon.getDistance())
+                        .put("deviceFingerPrint", deviceFingerPrint);
+                result.put(beaconSignalJson);
+            } catch (JSONException e) {
+                logErrorToDisplay(ERROR_SIGNAL_REQUEST_BODY);
+                //Log.e(TAG, LOG_JSON_EXCEPTION + e);
+                Sentry.captureMessage(LOG_JSON_EXCEPTION + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
+            }
         }
+        return result;
+    }
+
+    private void createAndSendSignalsPostRequest(JSONArray jsonArray) {
+        CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
+                Request.Method.POST,
+                POST_NEW_SIGNALS_REQUEST_URL,
+                sessionBearerToken,
+                jsonArray,
+                response -> {// TODO: get new token and update session token//Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
+                },
+                error -> {
+                    logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
+                    //Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
+                    Sentry.captureMessage(LOG_POST_REQUEST_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
+                }
+        );
+        //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
+        requestQueue.add(postNewSignalsListRequest);
     }
 
     //
@@ -433,7 +426,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         }
         updateCurrentScanningRateTest(String.valueOf(beaconManagerScanPeriod));
         initializeBeaconManager();
-        updateApplicationStatusText(SCAN_RATE_CHANGED_TO + String.valueOf(beaconManagerScanPeriod));
+        updateApplicationStatusText(SCAN_RATE_CHANGED_TO + beaconManagerScanPeriod);
     }
 
     public void startStopRangingButtonListener(View view){
@@ -446,39 +439,10 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             Log.i(TAG, RANGING_STARTED);
 
         } else{
-            createAndSendSignalsPostRequest();
-            logScannedSignalCountToDisplay();
             beaconManager.stopRangingBeacons(BEACON_REGION);
             beaconManager.removeAllRangeNotifiers();
             currentlyRanging = false;
             updateApplicationStatusText(RANGING_PAUSED_APP_STATUS);
-        }
-    }
-
-    private void createAndSendSignalsPostRequest() {
-        // Split signalsCache into partitions for sending to server
-        List<List<JSONObject>> partitions = ListUtils.partition(collectedSignalsCache, 50);
-        for (List<JSONObject> partition : partitions) {
-            JSONArray postRequestBody = new JSONArray();
-            for(JSONObject collectedSignal : partition) {
-                postRequestBody.put(collectedSignal);
-            }
-            CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
-                    Request.Method.POST,
-                    POST_NEW_SIGNALS_REQUEST_URL,
-                    sessionBearerToken,
-                    postRequestBody,
-                    response -> {// TODO: get new token and update session token//Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
-                    },
-                    error -> {
-                        logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
-                        //Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
-                        Sentry.captureMessage(LOG_POST_REQUEST_ERROR + error);
-                    }
-            );
-            //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
-            requestQueue.add(postNewSignalsListRequest);
-
         }
     }
 

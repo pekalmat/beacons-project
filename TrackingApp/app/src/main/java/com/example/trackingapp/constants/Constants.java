@@ -1,4 +1,4 @@
-package com.example.trackingapp;
+package com.example.trackingapp.constants;
 
 import org.altbeacon.beacon.Region;
 
@@ -7,8 +7,8 @@ public abstract class Constants {
     //
     // REST-API
     //
-    //public static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
-    public static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
+    public static final String HOST = "https://beaconsserver.herokuapp.com"; // heroku deployment host
+    //public static final String HOST = "http://192.168.1.188:8081"; // lokal deployment host
     public static final String POST_NEW_SIGNALS_REQUEST_URL = HOST + "/beacons/api/internal/signals";
     public static final String PUT_REGISTER_DEVICE_REQUEST_URL = HOST + "/beacons/api/internal/devices";
     public static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/admins/login";

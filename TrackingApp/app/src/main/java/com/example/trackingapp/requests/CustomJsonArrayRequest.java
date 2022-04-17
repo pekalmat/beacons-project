@@ -1,4 +1,4 @@
-package com.example.trackingapp;
+package com.example.trackingapp.requests;
 
 import androidx.annotation.Nullable;
 
