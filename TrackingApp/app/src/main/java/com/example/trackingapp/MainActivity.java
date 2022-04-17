@@ -28,14 +28,17 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.apache.commons.collections4.ListUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import io.sentry.ISpan;
 import io.sentry.ITransaction;
@@ -102,16 +105,19 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     // RANGING-STATUS ON/OFF
     private boolean currentlyRanging = false;
     //
-
+    private SimpleDateFormat dateFormat;
+    private List<JSONObject> collectedSignalsCache = new ArrayList<>();
     //
     //
     // App-Init
     //
     //
+    @SuppressLint("SimpleDateFormat")
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         Log.i(TAG, LOG_ON_CREATE);
         setContentView(R.layout.activity_main);
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'");
         createDefaultUncaughtExceptionHandler();
         verifyBluetooth();
         requestPermissions();
@@ -208,12 +214,14 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                             updateApplicationStatusText(ERROR_LOGIN_HEADER_EXTRACTION);
                             logErrorToDisplay(e.toString());
                             Log.e(TAG, LOG_LOGIN_AUTH_HEADER_ERROR + e);
+                            Sentry.captureMessage(LOG_LOGIN_AUTH_HEADER_ERROR + e);
                         }
                     },
                     error -> {
                         updateApplicationStatusText(ERROR_LOGIN_FAILED);
                         logErrorToDisplay(error.toString());
                         Log.e(TAG, LOG_LOGIN_ERROR + error);
+                        Sentry.captureMessage(LOG_LOGIN_ERROR + error);
                     }
             );
             Log.i(TAG, LOG_TRYING_LOGIN);
@@ -222,6 +230,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             updateApplicationStatusText(ERROR_LOGIN_FAILED_REQUEST_BODY);
             logErrorToDisplay(e.toString());
             Log.e(TAG,ERROR_LOGIN_FAILED_REQUEST_BODY, e);
+            Sentry.captureMessage(ERROR_LOGIN_FAILED_REQUEST_BODY + e);
         }
     }
 
@@ -247,7 +256,8 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                     error -> {
                         updateApplicationStatusText(ERROR_REGISTER_DEVICE_FAILED);
                         logErrorToDisplay(error.toString());
-                        Log.e(TAG, LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
+                        //Log.e(TAG, LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
+                        Sentry.captureMessage(LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
                     }
             );
             Log.i(TAG, LOG_TRYING_REGISTER_DEVICE);
@@ -255,7 +265,9 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         } catch (JSONException e) {
             updateApplicationStatusText(ERROR_REGISTER_DEVICE_REQUEST_BODY);
             logErrorToDisplay(e.toString());
-            Log.e(TAG, LOG_REGISTER_DEVICE_ERROR, e);
+            //Log.e(TAG, LOG_REGISTER_DEVICE_ERROR, e);
+            Sentry.captureMessage(LOG_REGISTER_DEVICE_ERROR + e);
+
         }
     }
 
@@ -273,24 +285,22 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             if (beacons.size() != 0) {
                 detectedSignalsCount += beacons.size();
                 try {
-                    JSONArray signalsJsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons);
-                    createAndSendSignalsPostRequest(signalsJsonArray);
+                    collectAllBeaconSignalsAndConvertToJsonArray(beacons);
                 } catch (JSONException e) {
                     logErrorToDisplay(ERROR_SIGNAL_REQUEST_BODY);
-                    Log.e(TAG, LOG_JSON_EXCEPTION + e);
+                    //Log.e(TAG, LOG_JSON_EXCEPTION + e);
+                    Sentry.captureMessage(LOG_JSON_EXCEPTION + e);
                 }
             }
-            logScannedSignalCountToDisplay();
         } else {
             Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
         }
         sentryTransaction.finish();
     }
 
-    private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
+    private void collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
         Date timestamp = Calendar.getInstance().getTime();
-        @SuppressLint("SimpleDateFormat") String timestampString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'").format(timestamp);
-        JSONArray result = new JSONArray();
+        String timestampString = dateFormat.format(timestamp);
         for (Beacon beacon: beacons) {
             // Collect all Beacon Signals and create JsonString for Each
             JSONObject beaconSignalJson = new JSONObject()
@@ -308,28 +318,8 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
                     .put("runningAverageRssi", beacon.getRunningAverageRssi())
                     .put("distance", beacon.getDistance())
                     .put("deviceFingerPrint", deviceFingerPrint);
-            result.put(beaconSignalJson);
+            collectedSignalsCache.add(beaconSignalJson);
         }
-        return result;
-    }
-
-    private void createAndSendSignalsPostRequest(JSONArray postRequestBody) {
-        CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
-                Request.Method.POST,
-                POST_NEW_SIGNALS_REQUEST_URL,
-                sessionBearerToken,
-                postRequestBody,
-                response -> {
-                    // TODO: get new token and update session token
-                    //Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
-                },
-                error -> {
-                    logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
-                    Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
-                }
-        );
-        //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
-        requestQueue.add(postNewSignalsListRequest);
     }
 
     //
@@ -456,10 +446,39 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
             Log.i(TAG, RANGING_STARTED);
 
         } else{
+            createAndSendSignalsPostRequest();
+            logScannedSignalCountToDisplay();
             beaconManager.stopRangingBeacons(BEACON_REGION);
             beaconManager.removeAllRangeNotifiers();
             currentlyRanging = false;
             updateApplicationStatusText(RANGING_PAUSED_APP_STATUS);
+        }
+    }
+
+    private void createAndSendSignalsPostRequest() {
+        // Split signalsCache into partitions for sending to server
+        List<List<JSONObject>> partitions = ListUtils.partition(collectedSignalsCache, 50);
+        for (List<JSONObject> partition : partitions) {
+            JSONArray postRequestBody = new JSONArray();
+            for(JSONObject collectedSignal : partition) {
+                postRequestBody.put(collectedSignal);
+            }
+            CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
+                    Request.Method.POST,
+                    POST_NEW_SIGNALS_REQUEST_URL,
+                    sessionBearerToken,
+                    postRequestBody,
+                    response -> {// TODO: get new token and update session token//Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
+                    },
+                    error -> {
+                        logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
+                        //Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
+                        Sentry.captureMessage(LOG_POST_REQUEST_ERROR + error);
+                    }
+            );
+            //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
+            requestQueue.add(postNewSignalsListRequest);
+
         }
     }
 
