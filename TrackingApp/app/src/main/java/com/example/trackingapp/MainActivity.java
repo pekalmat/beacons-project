@@ -37,6 +37,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
+import io.sentry.ISpan;
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+
 import static com.example.trackingapp.Constants.BEACON_REGION;
 import static com.example.trackingapp.Constants.COLLECTED_SIGNALS_COUNT;
 import static com.example.trackingapp.Constants.ERROR_LOGIN_FAILED;
@@ -97,6 +101,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
     private long beaconManagerScanPeriod = 100;
     // RANGING-STATUS ON/OFF
     private boolean currentlyRanging = false;
+    //
 
     //
     //
@@ -107,6 +112,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         super.onCreate(savedInstanceState);
         Log.i(TAG, LOG_ON_CREATE);
         setContentView(R.layout.activity_main);
+        createDefaultUncaughtExceptionHandler();
         verifyBluetooth();
         requestPermissions();
         requestQueue = Volley.newRequestQueue(this);
@@ -115,6 +121,17 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         requestMockLoginToGetBearerTokenAndRegisterDevice();
         // Setup beaconManager
         initializeBeaconManager();
+    }
+
+    private void createDefaultUncaughtExceptionHandler() {
+        // https://stackoverflow.com/questions/27829955/android-handle-application-crash-and-start-a-particular-activity
+        Thread.setDefaultUncaughtExceptionHandler(
+                new Thread.UncaughtExceptionHandler() {
+                    @Override
+                    public void uncaughtException (Thread thread, Throwable e) {
+                        Sentry.captureMessage("UncaughtExceptionFound:" + e);
+                    }
+                });
     }
 
     private void initializeBeaconManager() {
@@ -250,6 +267,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
 
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+        ITransaction sentryTransaction = Sentry.startTransaction("rangNotifierTransaction", "collectingSignals");
         if(sessionBearerToken != null & deviceFingerPrint != null) {
             //Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
             if (beacons.size() != 0) {
@@ -266,6 +284,7 @@ public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
         } else {
             Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
         }
+        sentryTransaction.finish();
     }
 
     private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons) throws JSONException {
