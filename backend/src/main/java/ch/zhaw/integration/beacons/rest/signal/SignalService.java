@@ -9,6 +9,8 @@ import ch.zhaw.integration.beacons.entities.signal.SignalToSignalDtoMapper;
 import ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing.TrilaterationSignalPreprocessor;
 import ch.zhaw.integration.beacons.rest.signal.importer.SignalBackupDataImporter;
 import org.mapstruct.factory.Mappers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Component
 public class SignalService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignalService.class);
 
     private final SignalRepository signalRepository;
     private final DeviceRepository deviceRepository;
@@ -54,7 +58,12 @@ public class SignalService {
 
     List<SignalDto> matchSignalsWithBeacons() {
         List<Signal> signals = signalRepository.findAll();
-        List<Signal> connectedSignals = trilaterationSignalPreprocessor.connectSignalsWithKnownSbbBeacons(signals);
-        return signalMapper.mapSignalListToSignalDtoList(connectedSignals);
+        List<Signal> connectedSignals = new ArrayList<>();
+        for (Signal signal : signals) {
+             trilaterationSignalPreprocessor.connectSignalsWithKnownSbbBeacons(signal).ifPresent(connectedSignals::add);
+        }
+        List<Signal> result = signalRepository.saveAll(connectedSignals);
+        LOGGER.info("Matched Signals : " + connectedSignals.size() + " of " + signals.size());
+        return signalMapper.mapSignalListToSignalDtoList(result);
     }
 }

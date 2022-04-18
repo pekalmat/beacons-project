@@ -37,6 +37,9 @@ public abstract class AbstractPositionCalculator {
             double distance3 = getDistanceRight(position);
 
             Pair<Double, Double> coordinates = trilateratePositionCoordinates(location1, location2, location3, distance1, distance2, distance3);
+
+            //newTrill2(location1, location2, location3, distance1, distance2, distance3, coordinates);
+
             calculatedPosition.setxCoordinate(coordinates.getFirst());
             calculatedPosition.setyCoordinate(coordinates.getSecond());
             calculatedPosition.setPositionTimestamp(getSignalTimestampMeanForPositionTimestamp(position));
@@ -52,25 +55,6 @@ public abstract class AbstractPositionCalculator {
         calculatedPosition.setSignal2(position.getMiddle());
         calculatedPosition.setSignal3(position.getRight());
     }
-
-/*    // TODO: Optional check this Trilateration library
-    //newTril(location1, location2, location3, distance1, distance2, distance3);
-    private void newTril(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3) {
-        double[][] positions = new double[][] {
-                { location1.getFirst(), location1.getSecond() },
-                { location2.getFirst(), location2.getSecond() },
-                { location3.getFirst(), location3.getSecond() }};
-        //double[] distances = new double[] { 50.0, 50.0, 50.0};
-        double[] distances = new double[] { distance1, distance2, distance3};
-        NonLinearLeastSquaresSolver solver = new NonLinearLeastSquaresSolver(new TrilaterationFunction(positions, distances), new LevenbergMarquardtOptimizer());
-        LeastSquaresOptimizer.Optimum optimum = solver.solve();
-// the answer
-        double[] centroid = optimum.getPoint().toArray();
-// error and geometry information; may throw SingularMatrixException depending the threshold argument provided
-        RealVector standardDeviation = optimum.getSigma(0);
-        RealMatrix covarianceMatrix = optimum.getCovariances(0);
-    }
-*/
 
     private Date getSignalTimestampMeanForPositionTimestamp(ImmutableTriple<Signal, Signal, Signal> position) {
         BigInteger total = BigInteger.ZERO;
@@ -203,4 +187,78 @@ public abstract class AbstractPositionCalculator {
         position.setEstimatedFloor(estimatedFloorValue);
         position.setFloors(beaconSignalFloors);
     }
+
+
+    // Quelle: https://www.101computing.net/cell-phone-trilateration-algorithm/
+    private Pair<Double, Double> newTrill2(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3, Pair<Double, Double> knownCoordinates) {
+
+        double x1 = location1.getFirst();
+        double y1 = location1.getSecond();
+        double r1 = distance1;
+
+        double x2 = location2.getFirst();
+        double y2 = location2.getSecond();
+        double r2 = distance2;
+
+        double x3 = location3.getFirst();
+        double y3 = location3.getSecond();
+        double r3 = distance3;
+
+        double A = (2 * x2) - (2 * x1);
+        double B = (2 * y2) - (2 * y1);
+        double C = Math.pow(r1, 2) - Math.pow(r2, 2) - Math.pow(x1, 2) + Math.pow(x2, 2) - Math.pow(y1, 2) + Math.pow(y2, 2);
+        double D = (2 * x3) - (2 * x2);
+        double E = (2 * y3) - (2 * y2);
+        double F = Math.pow(r2, 2) - Math.pow(r3, 2) - Math.pow(x2, 2) + Math.pow(x3, 2) - Math.pow(y2, 2) + Math.pow(y3, 2);
+        double x = ((C*E) - (F*B)) / ((E*A) - (B*D));
+        double y = ((C*D) - (A*F)) / ((B*D) - (A*E));
+
+        return Pair.of(x, y);
+    }
+
+
+    // QUelle: https://www.researchgate.net/figure/Trilateration-algorithm-for-object-localization-using-three-beacons-B-1-B-2-and-B-3_fig1_338241733
+    private Pair<Double, Double> newTrill(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3, Pair<Double, Double> knownCoordinates) {
+        double xCoBaseBeaconLoc1 = location1.getFirst();
+        double yCoBaseBeaconLoc1 = location2.getSecond();
+
+        double xCoBeaconLoc2 = location2.getFirst();
+        double yCoBeaconLoc2 = location2.getSecond();
+
+        double xCoBeaconLoc3 = location3.getFirst();
+        double yCoBeaconLoc3 = location3.getSecond();
+
+        // Equation 1 -> calculate = V^2
+        double vPower2 = Math.pow(xCoBeaconLoc3, 2) + Math.pow(yCoBeaconLoc3, 2);
+
+        // Equastion 2 -> calculate U = distance between Beacon1 and Beaco 2
+        double distBaceLoc1Loc2 =
+                Math.sqrt(
+                        (Math.pow((xCoBeaconLoc2 - xCoBaseBeaconLoc1), 2)
+                                + Math.pow((yCoBeaconLoc2 - yCoBaseBeaconLoc1), 2))
+                ) * 10000;
+
+        double radiusCircleBaseLoc1 = distance1;
+        double radiusCircleBeacLoc2 = distance2;
+        double radiusCircleBeacLoc3 = distance3;
+
+        // Equation 3 -> calculate xCoordinate
+        double x =
+                (Math.pow(radiusCircleBaseLoc1, 2)
+                        - Math.pow(radiusCircleBeacLoc2, 2)
+                        + Math.pow(distBaceLoc1Loc2, 2))
+                        /
+                        (2 * distBaceLoc1Loc2);
+
+        // Equation 3 -> calculate yCoordinate
+        double y =
+                (Math.pow(radiusCircleBaseLoc1, 2)
+                        - Math.pow(radiusCircleBeacLoc3, 2)
+                        + vPower2
+                        - (2 * xCoBeaconLoc3 * x))
+                        /
+                        (2 * yCoBeaconLoc3);
+        return Pair.of(x, y);
+    }
+
 }

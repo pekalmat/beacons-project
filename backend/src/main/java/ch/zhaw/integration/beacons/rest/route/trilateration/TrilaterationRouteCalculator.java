@@ -46,9 +46,9 @@ public class TrilaterationRouteCalculator {
         List<ImmutableTriple<Signal, Signal, Signal>> signals = prepareSignals(rawSignals);
         // 1.1. Calculate Route WITHOUT SIGNAL-SMOOTHING based on AndroidBeacons-LIBRARY-DISTANCE
         trilaterateRoute(CalculationMethod.TRILATERATION_NO_SMOOTHING_LIBRARY_DISTANCE, triggerTime, device, signals).ifPresent(result::add);
-        // TODO
         // 1.2. Calculate Route WITHOUT SIGNAL-SMOOTHING based on CALCULATED-DISTANCE using own formula based on RSSI & TXPOWER
-            // result.add(trilaterateRoute(CalculationMethod.TRILATERATION_NO_SMOOTHING_CALCULATED_DISTANCE, triggerTime, device, signals));
+        trilaterateRoute(CalculationMethod.TRILATERATION_NO_SMOOTHING_CALCULATED_DISTANCE, triggerTime, device, signals).ifPresent(result::add);
+        // TODO
             /*
             *  CALCULATORS NOT IMPLEMENTED YET
             *
