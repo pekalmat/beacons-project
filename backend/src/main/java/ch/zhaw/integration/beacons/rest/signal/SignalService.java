@@ -6,7 +6,7 @@ import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.entities.signal.SignalDto;
 import ch.zhaw.integration.beacons.entities.signal.SignalRepository;
 import ch.zhaw.integration.beacons.entities.signal.SignalToSignalDtoMapper;
-import ch.zhaw.integration.beacons.rest.route.trilateration.preprocessing.TrilaterationSignalPreprocessor;
+import ch.zhaw.integration.beacons.rest.route.trilateration.helper.TrilaterationSignalPreprocessor;
 import ch.zhaw.integration.beacons.rest.signal.importer.SignalBackupDataImporter;
 import org.mapstruct.factory.Mappers;
 import org.slf4j.Logger;
@@ -60,7 +60,10 @@ public class SignalService {
         List<Signal> signals = signalRepository.findAll();
         List<Signal> connectedSignals = new ArrayList<>();
         for (Signal signal : signals) {
-             trilaterationSignalPreprocessor.connectSignalsWithKnownSbbBeacons(signal).ifPresent(connectedSignals::add);
+             trilaterationSignalPreprocessor.connectSignalsWithKnownSbbBeacons(signal);
+             if (signal.getBeacon() != null) {
+                connectedSignals.add(signal);
+             }
         }
         List<Signal> result = signalRepository.saveAll(connectedSignals);
         LOGGER.info("Matched Signals : " + connectedSignals.size() + " of " + signals.size());

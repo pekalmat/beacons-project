@@ -25,6 +25,7 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
     private double runningAverageRssi;
     private double distance;
     private Double calculatedDistance;
+    private Double calculatedDistanceSlidingWindow;
     private String deviceFingerPrint;
 
     public Long getId() {
@@ -145,6 +146,14 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
 
     public void setCalculatedDistance(Double calculatedDistance) {
         this.calculatedDistance = calculatedDistance;
+    }
+
+    public Double getCalculatedDistanceSlidingWindow() {
+        return calculatedDistanceSlidingWindow;
+    }
+
+    public void setCalculatedDistanceSlidingWindow(Double calculatedDistanceSlidingWindow) {
+        this.calculatedDistanceSlidingWindow = calculatedDistanceSlidingWindow;
     }
 
     public String getDeviceFingerPrint() {

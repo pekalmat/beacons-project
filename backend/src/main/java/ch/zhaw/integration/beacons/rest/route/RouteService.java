@@ -22,7 +22,7 @@ public class RouteService {
 
     private final DeviceRepository deviceRepository;
     private final RouteRepository routeRepository;
-    private final RouteToRouteDtoMapper routeMapper;
+    private RouteToRouteDtoMapper routeMapper;
     private final TrilaterationRouteCalculator trilaterationRouteCalculator;
     private final RouteDataCsvExporter routeDataCsvExporter;
 
@@ -58,5 +58,9 @@ public class RouteService {
             return routeMapper.mapRouteToRouteDto(route.get());
         }
         return null;
+    }
+
+    protected void setRouteMapper(RouteToRouteDtoMapper routeMapper) {
+        this.routeMapper = routeMapper;
     }
 }

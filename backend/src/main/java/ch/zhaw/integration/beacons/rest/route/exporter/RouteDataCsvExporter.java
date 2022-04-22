@@ -24,30 +24,31 @@ public class RouteDataCsvExporter {
 
     private static final String SEMICOLON_COLUMN_DELIMITER = ";";
 
-    private static final String CALCULATION_METHOD = "calculation_method";
-    private static final String CALC_TRIGGER_TIME = "calc_trigger_time";
-    private static final String ROUTE_START_TIME = "route_start_time";
-    private static final String ROUTE_END_TIME = "route_end_time";
-    private static final String DEVICE_FINGERPRINT = "device_fingerprint";
+    private static final String CALCULATION_METHOD = "Calculation-Method";
+    private static final String CALC_TRIGGER_TIME = "Calculation Time";
+    private static final String ROUTE_START_TIME = "Route Start-Time";
+    private static final String ROUTE_END_TIME = "Rout End-time";
+    private static final String DEVICE_FINGERPRINT = "Device-Fingerprint";
+    private static final String DEVICE_ID = "Device-ID";
     private static final String GEO_SHAPE = "Geo Shape";
-    private static final String POSITION_TIMESTAMP = "position_timestamp";
-    private static final String POSITION_FLOOR_EST = "position_floor_estimation";
-    private static final String POSITION_SIGNALS_FLOORS = "position_signals_floors";
-    private static final String POSITION_SIGNAL1_BEACON = "position_signal_1_beacon";
-    private static final String POSITION_SIGNAL1_TIMESTAMP = "position_signal_1_timestamp";
-    private static final String POSITION_SIGNAL2_BEACON = "position_signal_2_beacon";
-    private static final String POSITION_SIGNAL2_TIMESTAMP = "position_signal_2_timestamp";
-    private static final String POSITION_SIGNAL3_BEACON = "position_signal_3_beacon";
-    private static final String POSITION_SIGNAL3_TIMESTAMP = "position_signal_3_timestamp";
+    private static final String POSITION_TIMESTAMP = "Position Time";
+    private static final String POSITION_FLOOR_EST = "Estimated Floor";
+    private static final String POSITION_SIGNALS_FLOORS = "signals_floors";
+    private static final String SIGNAL_1_ID = "Signal 1 ID";
+    private static final String SIGNAL_1_BEACON_ID = "Signal 1 Beacon-ID";
+    private static final String SIGNAL_2_ID = "Signal 2 ID";
+    private static final String SIGNAL_2_BEACON_ID = "Signal 2 Beacon-ID";
+    private static final String SIGNAL_3_ID = "Signal 3 ID";
+    private static final String SIGNAL_3_BEACON_ID = "Signal 3 Beacon-ID";
     private static final String[] HEADERS_LINES = {
-            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEO_SHAPE, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
-            POSITION_SIGNAL1_BEACON, POSITION_SIGNAL1_TIMESTAMP, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL3_BEACON, POSITION_SIGNAL3_TIMESTAMP
+            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, DEVICE_ID, GEO_SHAPE, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
+            SIGNAL_1_ID, SIGNAL_1_BEACON_ID, SIGNAL_2_ID, SIGNAL_2_BEACON_ID, SIGNAL_3_ID, SIGNAL_3_BEACON_ID
     };
     private static final String GEOPOS = "geopos";
     private static final String GEOPOSITION = "Geoposition";
     private static final String[] HEADERS_POINTS = {
-            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, GEOPOS, GEOPOSITION, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
-            POSITION_SIGNAL1_BEACON, POSITION_SIGNAL1_TIMESTAMP, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL2_BEACON, POSITION_SIGNAL3_BEACON, POSITION_SIGNAL3_TIMESTAMP
+            CALCULATION_METHOD, CALC_TRIGGER_TIME, ROUTE_START_TIME, ROUTE_END_TIME, DEVICE_FINGERPRINT, DEVICE_ID, GEOPOS, GEOPOSITION, POSITION_TIMESTAMP, POSITION_FLOOR_EST, POSITION_SIGNALS_FLOORS,
+            SIGNAL_1_ID, SIGNAL_1_BEACON_ID, SIGNAL_2_ID, SIGNAL_2_BEACON_ID, SIGNAL_3_ID, SIGNAL_3_BEACON_ID
     };
 
     public void createCsvPerRoute(List<Route> deviceRoutes, String type) {
@@ -85,17 +86,18 @@ public class RouteDataCsvExporter {
                     route.getRouteStart().toString(),
                     route.getRouteEnd().toString(),
                     route.getDevice().getFingerPrint(),
+                    route.getDevice().getId(),
                     getGeopos(position),
                     getGeoposition(position),
                     position.getPositionTimestamp(),
                     position.getEstimatedFloor(),
                     position.getFloors(),
+                    position.getSignal1().getId(),
                     position.getSignal1().getBeacon().getId(),
-                    position.getSignal1().getSignalTimestamp().toString(),
+                    position.getSignal2().getId(),
                     position.getSignal2().getBeacon().getId(),
-                    position.getSignal2().getSignalTimestamp().toString(),
-                    position.getSignal3().getBeacon().getId(),
-                    position.getSignal3().getSignalTimestamp().toString()
+                    position.getSignal3().getId(),
+                    position.getSignal3().getBeacon().getId()
             );
         }
     }
@@ -117,7 +119,6 @@ public class RouteDataCsvExporter {
                 ")";
     }
 
-    // TODO: check if its possible to connect route points with lines and refactor
     private void exportRouteConnectedByLines(CSVPrinter csvPrinter, Route route) throws IOException {
         // The Length of GeoShape Cell-value exceeds Java-String Maximum Length!! therefore a workaround is applied to print multiple line-records(but connected)
         // To Simplify we splitt each cell to contain max 100-GeoPoints instead of splitting by String Max Length
@@ -129,18 +130,18 @@ public class RouteDataCsvExporter {
                     route.getRouteStart().toString(),
                     route.getRouteEnd().toString(),
                     route.getDevice().getFingerPrint(),
+                    route.getDevice().getId(),
                     getGeoShapeJson(partition),
                     partition.get(0).getPositionTimestamp(),
                     partition.get(0).getEstimatedFloor(),
                     partition.get(0).getFloors(),
+                    partition.get(0).getSignal1().getId(),
                     partition.get(0).getSignal1().getBeacon().getId(),
-                    partition.get(0).getSignal1().getSignalTimestamp().toString(),
+                    partition.get(0).getSignal2().getId(),
                     partition.get(0).getSignal2().getBeacon().getId(),
-                    partition.get(0).getSignal2().getSignalTimestamp().toString(),
-                    partition.get(0).getSignal3().getBeacon().getId(),
-                    partition.get(0).getSignal3().getSignalTimestamp().toString()
-
-            );
+                    partition.get(0).getSignal3().getId(),
+                    partition.get(0).getSignal3().getBeacon().getId()
+                    );
         }
 
     }

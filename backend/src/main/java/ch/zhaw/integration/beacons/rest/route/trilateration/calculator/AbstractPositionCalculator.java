@@ -8,10 +8,10 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public abstract class AbstractPositionCalculator {
@@ -20,15 +20,17 @@ public abstract class AbstractPositionCalculator {
     public abstract double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition);
     public abstract double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition);
     public abstract double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition);
+    public abstract List<ImmutableTriple<Signal, Signal, Signal>> prepareSignalsTriplesForCalculation(Map<String, List<Signal>> signalsMap);
 
-    public List<Position> calculatePositions(List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
+    public List<Position> calculatePositions(Map<String, List<Signal>> signals, Route route) {
         List<Position> positions = new ArrayList<>();
+        // Applying filter and craete triples for calculation
+        List<ImmutableTriple<Signal, Signal, Signal>> positionSignals = prepareSignalsTriplesForCalculation(signals);
+        // Trilaterate positions
         for (ImmutableTriple<Signal, Signal, Signal> position : positionSignals) {
             Position calculatedPosition = new Position();
-            setFloorDetailsOnPosition(calculatedPosition, position);
-            setReferenceSignalsData(calculatedPosition, position);
 
-            // calculate coordinates
+            // prepare trilateration variables
             Pair<Double, Double> location1 = Pair.of(position.getLeft().getBeacon().getxCoordinate(), position.getLeft().getBeacon().getyCoordinate());
             Pair<Double, Double> location2 = Pair.of(position.getMiddle().getBeacon().getxCoordinate(), position.getMiddle().getBeacon().getyCoordinate());
             Pair<Double, Double> location3 = Pair.of(position.getRight().getBeacon().getxCoordinate(), position.getRight().getBeacon().getyCoordinate());
@@ -36,37 +38,26 @@ public abstract class AbstractPositionCalculator {
             double distance2 = getDistanceMiddle(position);
             double distance3 = getDistanceRight(position);
 
+            // calculate coordinates
             Pair<Double, Double> coordinates = trilateratePositionCoordinates(location1, location2, location3, distance1, distance2, distance3);
 
-            //newTrill2(location1, location2, location3, distance1, distance2, distance3, coordinates);
-
+            // set calculated coordinates on position
             calculatedPosition.setxCoordinate(coordinates.getFirst());
             calculatedPosition.setyCoordinate(coordinates.getSecond());
-            calculatedPosition.setPositionTimestamp(getSignalTimestampMeanForPositionTimestamp(position));
+            // set other representational-data on position
+            calculatedPosition.setPositionTimestamp(position.getLeft().getSignalTimestamp());
             calculatedPosition.setRoute(route);
+            setFloorDetailsOnPosition(calculatedPosition, position);
+            setReferenceSignalsData(calculatedPosition, position);
 
             positions.add(calculatedPosition);
         }
+        Collections.sort(positions);
         return positions;
     }
 
-    private void setReferenceSignalsData(Position calculatedPosition, ImmutableTriple<Signal, Signal, Signal> position) {
-        calculatedPosition.setSignal1(position.getLeft());
-        calculatedPosition.setSignal2(position.getMiddle());
-        calculatedPosition.setSignal3(position.getRight());
-    }
-
-    private Date getSignalTimestampMeanForPositionTimestamp(ImmutableTriple<Signal, Signal, Signal> position) {
-        BigInteger total = BigInteger.ZERO;
-        List<Date> signalDates = List.of(position.getLeft().getSignalTimestamp(), position.getMiddle().getSignalTimestamp(), position.getRight().getSignalTimestamp());
-        for (Date date : signalDates) {
-            total = total.add(BigInteger.valueOf(date.getTime()));
-        }
-        BigInteger averageMillis = total.divide(BigInteger.valueOf(signalDates.size()));
-        return new Date(averageMillis.longValue());
-    }
-
-    private Pair<Double, Double> trilateratePositionCoordinates(
+    // 1. best trilateration calculation so far
+    protected Pair<Double, Double> trilateratePositionCoordinates(
             Pair<Double, Double> location1,
             Pair<Double, Double> location2,
             Pair<Double, Double> location3,
@@ -174,21 +165,7 @@ public abstract class AbstractPositionCalculator {
         return Pair.of(triptx,tripty);
     }
 
-    private void setFloorDetailsOnPosition(Position position, ImmutableTriple<Signal, Signal, Signal> triple) {
-        String beaconSignalFloors = triple.getLeft().getBeacon().getFloor() + ","
-                + triple.getMiddle().getBeacon().getFloor() + ","
-                + triple.getRight().getBeacon().getFloor() + ",";
-        double floorSum = Double.parseDouble(triple.getLeft().getBeacon().getFloor())
-                + Double.parseDouble(triple.getMiddle().getBeacon().getFloor())
-                + Double.parseDouble(triple.getLeft().getBeacon().getFloor());
-        // floors are always 0 or negative therefore just adding floors and dividing after is ok in this szenario
-        double estimatedFloor = floorSum / Double.parseDouble(String.valueOf(3));
-        Integer estimatedFloorValue = (int) Math.round(estimatedFloor);
-        position.setEstimatedFloor(estimatedFloorValue);
-        position.setFloors(beaconSignalFloors);
-    }
-
-
+    // other trilateration technique -> not working
     // Quelle: https://www.101computing.net/cell-phone-trilateration-algorithm/
     private Pair<Double, Double> newTrill2(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3, Pair<Double, Double> knownCoordinates) {
 
@@ -217,6 +194,7 @@ public abstract class AbstractPositionCalculator {
     }
 
 
+    // other trilateration technique -> not working
     // QUelle: https://www.researchgate.net/figure/Trilateration-algorithm-for-object-localization-using-three-beacons-B-1-B-2-and-B-3_fig1_338241733
     private Pair<Double, Double> newTrill(Pair<Double, Double> location1, Pair<Double, Double> location2, Pair<Double, Double> location3, double distance1, double distance2, double distance3, Pair<Double, Double> knownCoordinates) {
         double xCoBaseBeaconLoc1 = location1.getFirst();
@@ -261,4 +239,27 @@ public abstract class AbstractPositionCalculator {
         return Pair.of(x, y);
     }
 
+    // other trilateration technique -> not working
+    // Trilateration-Library : https://github.com/lemmingapex/trilateration
+
+
+    private void setFloorDetailsOnPosition(Position position, ImmutableTriple<Signal, Signal, Signal> triple) {
+        String beaconSignalFloors = triple.getLeft().getBeacon().getFloor() + ","
+                + triple.getMiddle().getBeacon().getFloor() + ","
+                + triple.getRight().getBeacon().getFloor() + ",";
+        double floorSum = Double.parseDouble(triple.getLeft().getBeacon().getFloor())
+                + Double.parseDouble(triple.getMiddle().getBeacon().getFloor())
+                + Double.parseDouble(triple.getLeft().getBeacon().getFloor());
+        // floors are always 0 or negative therefore just adding floors and dividing after is ok in this szenario
+        double estimatedFloor = floorSum / Double.parseDouble(String.valueOf(3));
+        Integer estimatedFloorValue = (int) Math.round(estimatedFloor);
+        position.setEstimatedFloor(estimatedFloorValue);
+        position.setFloors(beaconSignalFloors);
+    }
+
+    private void setReferenceSignalsData(Position calculatedPosition, ImmutableTriple<Signal, Signal, Signal> position) {
+        calculatedPosition.setSignal1(position.getLeft());
+        calculatedPosition.setSignal2(position.getMiddle());
+        calculatedPosition.setSignal3(position.getRight());
+    }
 }

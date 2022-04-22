@@ -62,6 +62,8 @@ public class Signal implements Serializable, Comparable<Signal> {
 
     private Double calculatedDistance;
 
+    private Double calculatedDistanceSlidingWindow;
+
     public Long getId() {
         return id;
     }
@@ -188,6 +190,14 @@ public class Signal implements Serializable, Comparable<Signal> {
 
     public void setCalculatedDistance(Double calculatedDistance) {
         this.calculatedDistance = calculatedDistance;
+    }
+
+    public Double getCalculatedDistanceSlidingWindow() {
+        return calculatedDistanceSlidingWindow;
+    }
+
+    public void setCalculatedDistanceSlidingWindow(Double calculatedDistanceSlidingWindow) {
+        this.calculatedDistanceSlidingWindow = calculatedDistanceSlidingWindow;
     }
 
     public Device getDevice() {

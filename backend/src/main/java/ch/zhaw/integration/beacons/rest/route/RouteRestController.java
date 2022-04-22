@@ -20,7 +20,7 @@ import java.util.List;
 public class RouteRestController implements ApiRestController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteRestController.class);
-    private static final String INTERNAL_SIGNALS_PATH = API_INTERNAL_BASE_PATH + "/routes";
+    protected static final String INTERNAL_ROUTES_PATH = API_INTERNAL_BASE_PATH + "/routes";
 
     private final RouteService routeService;
 
@@ -41,7 +41,7 @@ public class RouteRestController implements ApiRestController {
      *  @returns:       HttpStatus = 200, JSON-Array of calculated routes
      *
      * */
-    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/calculate", method = RequestMethod.GET)
+    @RequestMapping(value =  INTERNAL_ROUTES_PATH + "/calculate", method = RequestMethod.GET)
     public ResponseEntity<List<RouteDto>> calculateRoutes(
             @RequestParam("routeStart") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeStart,
             @RequestParam("routeEnd") @DateTimeFormat(pattern = DateUtils.YYYY_MM_DD_HH_MM_SS) Date routeEnd,
@@ -62,7 +62,7 @@ public class RouteRestController implements ApiRestController {
      *  @returns:       HttpStatus = 200, JSON-Object of exported route
      *
      * */
-    @RequestMapping(value =  INTERNAL_SIGNALS_PATH + "/export", method = RequestMethod.GET)
+    @RequestMapping(value =  INTERNAL_ROUTES_PATH + "/export", method = RequestMethod.GET)
     public ResponseEntity<RouteDto> exportRoute(@RequestParam Long routeId, @RequestParam String type) {
         RouteDto exportedRoute = routeService.exportRoute(routeId, type);
         LOGGER.info("Route exported to csv: " + exportedRoute);

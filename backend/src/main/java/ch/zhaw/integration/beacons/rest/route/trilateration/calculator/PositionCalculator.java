@@ -4,7 +4,6 @@ import ch.zhaw.integration.beacons.entities.position.Position;
 import ch.zhaw.integration.beacons.entities.route.Route;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -26,8 +25,8 @@ public class PositionCalculator {
         return calculators.get(calculationMethod);
     }
 
-    public List<Position> calculatePositions(CalculationMethod calculationMethod, List<ImmutableTriple<Signal, Signal, Signal>> positionSignals, Route route) {
+    public List<Position> calculatePositions(CalculationMethod calculationMethod, Map<String, List<Signal>> signals, Route route) {
         AbstractPositionCalculator calculator = getCalculator(calculationMethod);
-        return calculator.calculatePositions(positionSignals, route);
+        return calculator.calculatePositions(signals, route);
     }
 }

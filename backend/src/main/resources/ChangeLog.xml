@@ -147,4 +147,22 @@
         <addForeignKeyConstraint baseColumnNames="signal3_id" baseTableName="position" constraintName="signal3_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="signal"/>
     </changeSet>
 
+    <changeSet author="Mateusz Pekalski" id="Add calculatedDistanceSlidingWindow Column to Signal">
+        <comment>Adding calculatedDistanceSlidingWindow-column to Signal table</comment>
+        <addColumn tableName="signal">
+            <column name="calculated_distance_sliding_window" type="DOUBLE PRECISION"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="data migration after refactoring">
+        <update tableName="route">
+            <column name="calculation_method" value="TRILATERATION_NO_SMOOTHING"/>
+            <where>calculation_method='TRILATERATION_NO_SMOOTHING_LIBRARY_DISTANCE'</where>
+        </update>
+        <update tableName="route">
+            <column name="calculation_method" value="TRILATERATION_NO_SMOOTHING"/>
+            <where>calculation_method='TRILATERATION_NO_SMOOTHING_CALCULATED_DISTANCE'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>
