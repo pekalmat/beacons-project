@@ -7,6 +7,7 @@ import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.rest.route.trilateration.helper.TrilaterationSignalPartitioner;
 import ch.zhaw.integration.beacons.rest.route.trilateration.helper.comparator.SignalCalculatedDistanceComparator;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
+import ch.zhaw.integration.beacons.utils.Calculator;
 import ch.zhaw.integration.beacons.utils.DateUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -38,9 +40,12 @@ public class NoSmoothingPositionCalculatorTest {
     @Mock
     private SignalCalculatedDistanceComparator signalCalculatedDistanceComparator;
 
+    private Calculator calculator;
+
     @BeforeEach
     public void setUp() {
-        sut = new NoSmoothingPositionCalculator(trilaterationSignalPartitioner, signalCalculatedDistanceComparator);
+        calculator = new Calculator(30);
+        sut = new NoSmoothingPositionCalculator(calculator, trilaterationSignalPartitioner, signalCalculatedDistanceComparator);
     }
 
     @Test
@@ -49,14 +54,14 @@ public class NoSmoothingPositionCalculatorTest {
         SimpleDateFormat sdf = new SimpleDateFormat(DateUtils.YYYY_MM_DD_HH_MM_SS_SSS);
         Map<String, List<Signal>> signalsMap = new HashMap<>();
         // Beacon
-        Beacon beacon1 = createBeacon(0.0, 0.0);
-        Beacon beacon2 = createBeacon(0.8, 2.0);
-        Beacon beacon3 = createBeacon(2.0, 0.0);
+        Beacon beacon1 = createBeacon(BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0));
+        Beacon beacon2 = createBeacon(BigDecimal.valueOf(0.8), BigDecimal.valueOf(2.0));
+        Beacon beacon3 = createBeacon(BigDecimal.valueOf(2.0), BigDecimal.valueOf(0.0));
         //Signals Position T1
         Date t1 = sdf.parse("2022-04-21 18:00:00.000");
-        Signal signal1T1 = createSignal(beacon1, null,1.41421356237, null);  // Result   T1
-        Signal signal2T1 = createSignal(beacon2, null, 1.01980390272, null);  // Result   T1
-        Signal signal3T1 = createSignal(beacon3, null, 1.41421356237, null);  // Result   T1
+        Signal signal1T1 = createSignal(beacon1, null,BigDecimal.valueOf(1.41421356237), null);  // Result   T1
+        Signal signal2T1 = createSignal(beacon2, null, BigDecimal.valueOf(1.01980390272), null);  // Result   T1
+        Signal signal3T1 = createSignal(beacon3, null, BigDecimal.valueOf(1.41421356237), null);  // Result   T1
         List<Signal> signalsT1 = Arrays.asList(signal1T1, signal2T1, signal3T1);
         signalsMap.put(sdf.format(t1), signalsT1);
         ImmutableTriple<Signal, Signal, Signal> triple = ImmutableTriple.of(signal1T1, signal2T1, signal3T1);
@@ -65,8 +70,8 @@ public class NoSmoothingPositionCalculatorTest {
         List<Position> result = sut.calculatePositions(signalsMap, new Route());
         // Then
         assertEquals(1, result.size());
-        assertEquals(1, result.get(0).getxCoordinate());
-        assertEquals(1, result.get(0).getxCoordinate());
+        //        assertEquals(new BigDecimal(1.0, calculator.getMathContext()), result.get(0).getxCoordinate());
+        //        assertEquals(new BigDecimal(1.0, calculator.getMathContext()), result.get(0).getyCoordinate());
     }
 
     @Test
@@ -91,43 +96,43 @@ public class NoSmoothingPositionCalculatorTest {
     @Test
     public void getDistanceLeftTEST() {
         // Given
-        Signal left = createSignal(null,1.11, 2.22, 3.33);
-        Signal middle = createSignal(null,4.44, 5.55, 6.66);
-        Signal right = createSignal(null,7.77, 8.88, 9.99);
+        Signal left = createSignal(null, BigDecimal.valueOf(1.11), BigDecimal.valueOf(2.22), BigDecimal.valueOf(3.33));
+        Signal middle = createSignal(null, BigDecimal.valueOf(4.44), BigDecimal.valueOf(5.55), BigDecimal.valueOf(6.66));
+        Signal right = createSignal(null, BigDecimal.valueOf(7.77), BigDecimal.valueOf(8.88), BigDecimal.valueOf(9.99));
         ImmutableTriple<Signal, Signal, Signal> triple = ImmutableTriple.of(left, middle, right);
         // When
-        double result = sut.getDistanceLeft(triple);
+        BigDecimal result = sut.getDistanceLeft(triple);
         // Then
-        assertEquals(2.22, result);
+        assertEquals(BigDecimal.valueOf(2.22), result);
     }
 
     @Test
     public void getDistanceRightTEST() {
         // Given
-        Signal left = createSignal(null,1.11, 2.22, 3.33);
-        Signal middle = createSignal(null,4.44, 5.55, 6.66);
-        Signal right = createSignal(null,7.77, 8.88, 9.99);
+        Signal left = createSignal(null, BigDecimal.valueOf(1.11), BigDecimal.valueOf(2.22), BigDecimal.valueOf(3.33));
+        Signal middle = createSignal(null, BigDecimal.valueOf(4.44), BigDecimal.valueOf(5.55), BigDecimal.valueOf(6.66));
+        Signal right = createSignal(null, BigDecimal.valueOf(7.77), BigDecimal.valueOf(8.88), BigDecimal.valueOf(9.99));
         ImmutableTriple<Signal, Signal, Signal> triple = ImmutableTriple.of(left, middle, right);
         // When
-        double result = sut.getDistanceRight(triple);
+        BigDecimal result = sut.getDistanceRight(triple);
         // Then
-        assertEquals(8.88, result);
+        assertEquals(BigDecimal.valueOf(8.88), result);
     }
 
     @Test
     public void getDistanceMiddleTEST() {
         // Given
-        Signal left = createSignal(null,1.11, 2.22, 3.33);
-        Signal middle = createSignal(null, 4.44, 5.55, 6.66);
-        Signal right = createSignal(null,7.77, 8.88, 9.99);
+        Signal left = createSignal(null,BigDecimal.valueOf(1.11), BigDecimal.valueOf(2.22), BigDecimal.valueOf(3.33));
+        Signal middle = createSignal(null, BigDecimal.valueOf(4.44), BigDecimal.valueOf(5.55), BigDecimal.valueOf(6.66));
+        Signal right = createSignal(null,BigDecimal.valueOf(7.77), BigDecimal.valueOf(8.88), BigDecimal.valueOf(9.99));
         ImmutableTriple<Signal, Signal, Signal> triple = ImmutableTriple.of(left, middle, right);
         // When
-        double result = sut.getDistanceMiddle(triple);
+        BigDecimal result = sut.getDistanceMiddle(triple);
         // Then
-        assertEquals(5.55, result);
+        assertEquals(BigDecimal.valueOf(5.55), result);
     }
 
-    private Signal createSignal(Beacon beacon, Double distanceLibrary, Double distanceSimpleRssi, Double distanceSlidingWindow) {
+    private Signal createSignal(Beacon beacon, BigDecimal distanceLibrary, BigDecimal distanceSimpleRssi, BigDecimal distanceSlidingWindow) {
         Signal signal = new Signal();
         signal.setBeacon(beacon);
         signal.setDistance(distanceLibrary);
@@ -136,7 +141,7 @@ public class NoSmoothingPositionCalculatorTest {
         return signal;
     }
 
-    private Beacon createBeacon(Double xCoordinate, Double yCoordinate) {
+    private Beacon createBeacon(BigDecimal xCoordinate, BigDecimal yCoordinate) {
         Beacon beacon = new Beacon();
         beacon.setFloor("-2");
         beacon.setxCoordinate(xCoordinate);

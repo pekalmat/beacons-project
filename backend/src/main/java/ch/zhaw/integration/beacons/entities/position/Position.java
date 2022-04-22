@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -35,9 +36,9 @@ public class Position implements Serializable, Comparable<Position>{
 
     private Integer estimatedFloor;
 
-    private double xCoordinate;
+    private BigDecimal xCoordinate;
 
-    private double yCoordinate;
+    private BigDecimal yCoordinate;
 
     private Date positionTimestamp;
 
@@ -82,19 +83,19 @@ public class Position implements Serializable, Comparable<Position>{
         this.estimatedFloor = estimatedFloor;
     }
 
-    public double getxCoordinate() {
+    public BigDecimal getxCoordinate() {
         return xCoordinate;
     }
 
-    public void setxCoordinate(double xCoordinate) {
+    public void setxCoordinate(BigDecimal xCoordinate) {
         this.xCoordinate = xCoordinate;
     }
 
-    public double getyCoordinate() {
+    public BigDecimal getyCoordinate() {
         return yCoordinate;
     }
 
-    public void setyCoordinate(double yCoordinate) {
+    public void setyCoordinate(BigDecimal yCoordinate) {
         this.yCoordinate = yCoordinate;
     }
 

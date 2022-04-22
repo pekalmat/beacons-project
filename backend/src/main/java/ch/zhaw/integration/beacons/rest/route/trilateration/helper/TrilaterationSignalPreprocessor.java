@@ -8,6 +8,7 @@ import ch.zhaw.integration.beacons.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,10 +75,10 @@ public class TrilaterationSignalPreprocessor {
 
     protected void enrichSignalWithCalculatedDistance(Signal signal) {
         // simple distance calculation
-        double calculatedDistance = calculateDistance(Double.valueOf(signal.getRssi()), signal.getTxPower());
+        BigDecimal calculatedDistance = calculateDistance(Double.valueOf(signal.getRssi()), signal.getTxPower());
         signal.setCalculatedDistance(calculatedDistance);
         // slidingWindow distance calculation
-        double calculatedDistanceSlidingWindow = calculateDistance(signal.getRunningAverageRssi(), signal.getTxPower());
+        BigDecimal calculatedDistanceSlidingWindow = calculateDistance(signal.getRunningAverageRssi(), signal.getTxPower());
         signal.setCalculatedDistanceSlidingWindow(calculatedDistanceSlidingWindow);
     }
 
@@ -90,10 +91,10 @@ public class TrilaterationSignalPreprocessor {
         return true;
     }
 
-    private double calculateDistance(double rssi, Integer txPower) {
+    private BigDecimal calculateDistance(Double rssi, Integer txPower) {
         // source https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
         int n = distCalcEnvironmentalFactor; // N (Constant depends on the Environmental factor. Range 2-4) -> in Indoor Environments usualy 4 due to lot of Noise
-        return Math.pow(10, ((Double.valueOf(txPower) - rssi)) / (10 * n));
+        return BigDecimal.valueOf(Math.pow(10, ((Double.valueOf(txPower) - rssi)) / (10 * n)));
     }
 
 }

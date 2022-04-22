@@ -5,9 +5,11 @@ import ch.zhaw.integration.beacons.rest.route.trilateration.calculator.AbstractP
 import ch.zhaw.integration.beacons.rest.route.trilateration.helper.comparator.SignalCalculatedDistanceSlidingWindowComparator;
 import ch.zhaw.integration.beacons.rest.route.trilateration.helper.TrilaterationSignalPartitioner;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
+import ch.zhaw.integration.beacons.utils.Calculator;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +19,8 @@ public class SlidingWindowPositionCalculator extends AbstractPositionCalculator 
     private final TrilaterationSignalPartitioner trilaterationSignalPartitioner;
     private final SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator;
 
-    public SlidingWindowPositionCalculator(TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator) {
+    public SlidingWindowPositionCalculator(Calculator calculator, TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator) {
+        super(calculator);
         this.trilaterationSignalPartitioner = trilaterationSignalPartitioner;
         this.signalCalculatedDistanceSlidingWindowComparator = signalCalculatedDistanceSlidingWindowComparator;
     }
@@ -34,17 +37,17 @@ public class SlidingWindowPositionCalculator extends AbstractPositionCalculator 
     }
 
     @Override
-    public double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> triple) {
+    public BigDecimal getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> triple) {
         return triple.getLeft().getCalculatedDistanceSlidingWindow();
     }
 
     @Override
-    public double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> triple) {
+    public BigDecimal getDistanceRight(ImmutableTriple<Signal, Signal, Signal> triple) {
         return triple.getRight().getCalculatedDistanceSlidingWindow();
     }
 
     @Override
-    public double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> triple) {
+    public BigDecimal getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> triple) {
         return triple.getMiddle().getCalculatedDistanceSlidingWindow();
     }
 

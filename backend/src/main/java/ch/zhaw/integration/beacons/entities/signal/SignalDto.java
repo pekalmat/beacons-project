@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 public class SignalDto extends RepresentationModel<SignalDto> implements Serializable {
@@ -22,10 +23,10 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
     private String parserIdentifier;
     private int txPower;
     private int rssi;
-    private double runningAverageRssi;
-    private double distance;
-    private Double calculatedDistance;
-    private Double calculatedDistanceSlidingWindow;
+    private Double runningAverageRssi;
+    private BigDecimal distance;
+    private BigDecimal calculatedDistance;
+    private BigDecimal calculatedDistanceSlidingWindow;
     private String deviceFingerPrint;
 
     public Long getId() {
@@ -124,35 +125,35 @@ public class SignalDto extends RepresentationModel<SignalDto> implements Seriali
         this.rssi = rssi;
     }
 
-    public double getRunningAverageRssi() {
+    public Double getRunningAverageRssi() {
         return runningAverageRssi;
     }
 
-    public void setRunningAverageRssi(double runningAverageRssi) {
+    public void setRunningAverageRssi(Double runningAverageRssi) {
         this.runningAverageRssi = runningAverageRssi;
     }
 
-    public double getDistance() {
+    public BigDecimal getDistance() {
         return distance;
     }
 
-    public void setDistance(double distance) {
+    public void setDistance(BigDecimal distance) {
         this.distance = distance;
     }
 
-    public Double getCalculatedDistance() {
+    public BigDecimal getCalculatedDistance() {
         return calculatedDistance;
     }
 
-    public void setCalculatedDistance(Double calculatedDistance) {
+    public void setCalculatedDistance(BigDecimal calculatedDistance) {
         this.calculatedDistance = calculatedDistance;
     }
 
-    public Double getCalculatedDistanceSlidingWindow() {
+    public BigDecimal getCalculatedDistanceSlidingWindow() {
         return calculatedDistanceSlidingWindow;
     }
 
-    public void setCalculatedDistanceSlidingWindow(Double calculatedDistanceSlidingWindow) {
+    public void setCalculatedDistanceSlidingWindow(BigDecimal calculatedDistanceSlidingWindow) {
         this.calculatedDistanceSlidingWindow = calculatedDistanceSlidingWindow;
     }
 

@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -44,9 +45,9 @@ public class Beacon implements Serializable {
 
     private String floor;
 
-    private double xCoordinate;
+    private BigDecimal xCoordinate;
 
-    private double yCoordinate;
+    private BigDecimal yCoordinate;
 
     public Long getId() {
         return id;
@@ -124,19 +125,19 @@ public class Beacon implements Serializable {
         this.floor = floor;
     }
 
-    public double getxCoordinate() {
+    public BigDecimal getxCoordinate() {
         return xCoordinate;
     }
 
-    public void setxCoordinate(double xCoordinate) {
+    public void setxCoordinate(BigDecimal xCoordinate) {
         this.xCoordinate = xCoordinate;
     }
 
-    public double getyCoordinate() {
+    public BigDecimal getyCoordinate() {
         return yCoordinate;
     }
 
-    public void setyCoordinate(double yCoordinate) {
+    public void setyCoordinate(BigDecimal yCoordinate) {
         this.yCoordinate = yCoordinate;
     }
 }

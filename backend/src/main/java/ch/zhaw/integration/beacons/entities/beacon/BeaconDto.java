@@ -3,6 +3,7 @@ package ch.zhaw.integration.beacons.entities.beacon;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class BeaconDto extends RepresentationModel<BeaconDto> implements Serializable {
 
@@ -16,8 +17,8 @@ public class BeaconDto extends RepresentationModel<BeaconDto> implements Seriali
     private String standort;
     private String geoposition;
     private String floor;
-    private double xCoordinate;
-    private double yCoordinate;
+    private BigDecimal xCoordinate;
+    private BigDecimal yCoordinate;
 
     public Long getId() {
         return id;
@@ -99,19 +100,19 @@ public class BeaconDto extends RepresentationModel<BeaconDto> implements Seriali
         this.floor = floor;
     }
 
-    public double getxCoordinate() {
+    public BigDecimal getxCoordinate() {
         return xCoordinate;
     }
 
-    public void setxCoordinate(double xCoordinate) {
+    public void setxCoordinate(BigDecimal xCoordinate) {
         this.xCoordinate = xCoordinate;
     }
 
-    public double getyCoordinate() {
+    public BigDecimal getyCoordinate() {
         return yCoordinate;
     }
 
-    public void setyCoordinate(double yCoordinate) {
+    public void setyCoordinate(BigDecimal yCoordinate) {
         this.yCoordinate = yCoordinate;
     }
 }

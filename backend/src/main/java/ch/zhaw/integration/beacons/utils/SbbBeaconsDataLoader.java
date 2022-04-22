@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,9 +77,9 @@ public class SbbBeaconsDataLoader {
         beacon.setStandort(csvRecord.get(STANDORT));
         beacon.setGeoposition(csvRecord.get(GEOPOSITION));
         beacon.setFloor(csvRecord.get(FLOOR));
-        String[] coordinates = beacon.getGeoposition().split(",");
-        beacon.setxCoordinate(Double.parseDouble(coordinates[0]));
-        beacon.setyCoordinate(Double.parseDouble(coordinates[1]));
+        String[] coordinates = beacon.getGeopos().split("\\|");
+        beacon.setxCoordinate(new BigDecimal(coordinates[0].substring(1)));
+        beacon.setyCoordinate(new BigDecimal(coordinates[1]));
         return beacon;
     }
 }

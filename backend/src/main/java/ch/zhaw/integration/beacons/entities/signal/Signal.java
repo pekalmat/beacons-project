@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -58,11 +59,11 @@ public class Signal implements Serializable, Comparable<Signal> {
 
     private Double runningAverageRssi;
 
-    private Double distance;
+    private BigDecimal distance;
 
-    private Double calculatedDistance;
+    private BigDecimal calculatedDistance;
 
-    private Double calculatedDistanceSlidingWindow;
+    private BigDecimal calculatedDistanceSlidingWindow;
 
     public Long getId() {
         return id;
@@ -168,11 +169,11 @@ public class Signal implements Serializable, Comparable<Signal> {
         this.runningAverageRssi = runningAverageRssi;
     }
 
-    public Double getDistance() {
+    public BigDecimal getDistance() {
         return distance;
     }
 
-    public void setDistance(Double distance) {
+    public void setDistance(BigDecimal distance) {
         this.distance = distance;
     }
 
@@ -184,19 +185,19 @@ public class Signal implements Serializable, Comparable<Signal> {
         this.beacon = beacon;
     }
 
-    public Double getCalculatedDistance() {
+    public BigDecimal getCalculatedDistance() {
         return calculatedDistance;
     }
 
-    public void setCalculatedDistance(Double calculatedDistance) {
+    public void setCalculatedDistance(BigDecimal calculatedDistance) {
         this.calculatedDistance = calculatedDistance;
     }
 
-    public Double getCalculatedDistanceSlidingWindow() {
+    public BigDecimal getCalculatedDistanceSlidingWindow() {
         return calculatedDistanceSlidingWindow;
     }
 
-    public void setCalculatedDistanceSlidingWindow(Double calculatedDistanceSlidingWindow) {
+    public void setCalculatedDistanceSlidingWindow(BigDecimal calculatedDistanceSlidingWindow) {
         this.calculatedDistanceSlidingWindow = calculatedDistanceSlidingWindow;
     }
 

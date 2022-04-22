@@ -47,7 +47,7 @@ public class BeaconsDataCsvExporter {
                         beacon.getGeopos(),
                         beacon.getRegisterSource(),
                         beacon.getUuid(),
-                        beacon.getGeoposition(),
+                        beacon.getxCoordinate() + ", " + beacon.getyCoordinate(),
                         beacon.getFloor());
 
             }

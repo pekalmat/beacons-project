@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -44,25 +45,25 @@ public class TrilaterationSignalPartitionerTest {
         Beacon beacon5 = createBeacon("2", "2");
         //Signals T1 -> Result Triple 3 of 3
         Date t1 = sdf.parse("2022-04-21 18:00:00.000");
-        Signal signal1T1 = createSignal(beacon1, 3.0);  // Result   T1
-        Signal signal2T1 = createSignal(beacon2, 3.0);  // Result   T1
-        Signal signal3T1 = createSignal(beacon3, 3.0);  // Result   T1
+        Signal signal1T1 = createSignal(beacon1, BigDecimal.valueOf(3.0));  // Result   T1
+        Signal signal2T1 = createSignal(beacon2, BigDecimal.valueOf(3.0));  // Result   T1
+        Signal signal3T1 = createSignal(beacon3, BigDecimal.valueOf(3.0));  // Result   T1
         List<Signal> signalsT1 = Arrays.asList(signal1T1, signal2T1, signal3T1);
         signalsMap.put(sdf.format(t1), signalsT1);
         //Signals T2 -> Result Triple 3 of 5 (all different beacons -> selection by distance)
         Date t2 = sdf.parse("2022-04-21 18:00:00.200");
-        Signal signal1T2 = createSignal(beacon1, 10.0);  // Ignored
-        Signal signal2T2 = createSignal(beacon2, 1.0);  // Result   T2
-        Signal signal3T2 = createSignal(beacon3, 2.0);  // Result   T2
-        Signal signal4T2 = createSignal(beacon4, 4.0);  // Ignored
-        Signal signal5T2 = createSignal(beacon5, 3.0);  // Result   T2
+        Signal signal1T2 = createSignal(beacon1, BigDecimal.valueOf(10.0));  // Ignored
+        Signal signal2T2 = createSignal(beacon2, BigDecimal.valueOf(1.0));  // Result   T2
+        Signal signal3T2 = createSignal(beacon3, BigDecimal.valueOf(2.0));  // Result   T2
+        Signal signal4T2 = createSignal(beacon4, BigDecimal.valueOf(4.0));  // Ignored
+        Signal signal5T2 = createSignal(beacon5, BigDecimal.valueOf(3.0));  // Result   T2
         List<Signal> signalsT2 = Arrays.asList(signal1T2, signal2T2, signal3T2, signal4T2, signal5T2);
         signalsMap.put(sdf.format(t2), signalsT2);
         //Signals T3 -> Result Triple 0 of 3 (2 different beacons -> no trilateration possible)
         Date t3 = sdf.parse("2022-04-21 18:00:00.400");
-        Signal signal1T3 = createSignal(beacon1, 3.0);  // Result   T1
-        Signal signal2T3 = createSignal(beacon2, 3.0);  // Result   T1
-        Signal signal3T3 = createSignal(beacon2, 3.0);  // Result   T1
+        Signal signal1T3 = createSignal(beacon1, BigDecimal.valueOf(3.0));  // Result   T1
+        Signal signal2T3 = createSignal(beacon2, BigDecimal.valueOf(3.0));  // Result   T1
+        Signal signal3T3 = createSignal(beacon2, BigDecimal.valueOf(3.0));  // Result   T1
         List<Signal> signalsT3 = Arrays.asList(signal1T3, signal2T3, signal3T3);
         signalsMap.put(sdf.format(t3), signalsT3);
         // When
@@ -79,7 +80,7 @@ public class TrilaterationSignalPartitionerTest {
         assertEquals(signal5T2, result.get(1).getRight());
     }
 
-    private Signal createSignal(Beacon beacon, Double calculatedDistance) {
+    private Signal createSignal(Beacon beacon, BigDecimal calculatedDistance) {
         Signal signal = new Signal();
         signal.setMajor(beacon.getMajor());
         signal.setMinor(beacon.getMinor());

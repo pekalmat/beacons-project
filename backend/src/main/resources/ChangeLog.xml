@@ -165,4 +165,17 @@
         </update>
     </changeSet>
 
+    <changeSet author="Mateusz Pekalski" id="change double-types to bigDecimal to increase calculation precision">
+        <modifyDataType tableName="beacon" columnName="x_coordinate" newDataType="decimal"/>
+        <modifyDataType tableName="beacon" columnName="y_coordinate" newDataType="decimal"/>
+
+        <modifyDataType tableName="signal" columnName="distance" newDataType="decimal"/>
+        <modifyDataType tableName="signal" columnName="calculated_distance" newDataType="decimal"/>
+        <modifyDataType tableName="signal" columnName="calculated_distance_sliding_window" newDataType="decimal"/>
+
+        <modifyDataType tableName="position" columnName="x_coordinate" newDataType="decimal"/>
+        <modifyDataType tableName="position" columnName="x_coordinate" newDataType="decimal"/>
+
+    </changeSet>
+
 </databaseChangeLog>

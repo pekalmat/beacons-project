@@ -3,14 +3,20 @@ package ch.zhaw.integration.beacons.rest.route.trilateration.calculator.kalmann;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.rest.route.trilateration.calculator.AbstractPositionCalculator;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
+import ch.zhaw.integration.beacons.utils.Calculator;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class KalmannFilterPositionCalculator extends AbstractPositionCalculator {
+
+    public KalmannFilterPositionCalculator(Calculator calculator) {
+        super(calculator);
+    }
 
     @Override
     public CalculationMethod getCalculationMethod() {
@@ -23,17 +29,17 @@ public class KalmannFilterPositionCalculator extends AbstractPositionCalculator 
     }
 
     @Override
-    public double getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition) {
+    public BigDecimal getDistanceLeft(ImmutableTriple<Signal, Signal, Signal> partition) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
-    public double getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition) {
+    public BigDecimal getDistanceRight(ImmutableTriple<Signal, Signal, Signal> partition) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
-    public double getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition) {
+    public BigDecimal getDistanceMiddle(ImmutableTriple<Signal, Signal, Signal> partition) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 }
