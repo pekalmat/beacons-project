@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,21 +23,27 @@ public class TrilaterationSignalPreprocessor {
 
     private final String[] floorsToIgnore;
     private final int distCalcEnvironmentalFactor;
+    private final int beaconSignalsMinCount;
+    private final int beaconSignalsMinCountPeriod;
     private final BeaconRepository beaconRepository;
     private final SignalRepository signalRepository;
 
     public TrilaterationSignalPreprocessor(
             @Value("${beacons.trilateration.signals.ignore.floors}") String[] floorsToIgnore,
             @Value("${beacons.trilateration.distance.calculation.environmental.factor}") String distCalcEnvironmentalFactor,
+            @Value("${beacons.trilateration.beacon.signal.min.count}")  String beaconSignalsMinCount,
+            @Value("${beacons.trilateration.beacon.signal.min.count.period}") String beaconSignalsMinCountPeriod,
             BeaconRepository beaconRepository,
             SignalRepository signalRepository) {
         this.floorsToIgnore = floorsToIgnore;
         this.distCalcEnvironmentalFactor = Integer.parseInt(distCalcEnvironmentalFactor);
+        this.beaconSignalsMinCount = Integer.parseInt(beaconSignalsMinCount);
+        this.beaconSignalsMinCountPeriod = Integer.parseInt(beaconSignalsMinCountPeriod);
         this.beaconRepository = beaconRepository;
         this.signalRepository = signalRepository;
     }
 
-    public Map<String, List<Signal>> preprocess(List<Signal> signals) {
+    public Map<String, List<Signal>> preprocess(List<Signal> signals, Date routeStartTime, Date routeEndTime) {
         Map<String, List<Signal>> result = new HashMap<>();
         SimpleDateFormat sdf = new SimpleDateFormat(DateUtils.YYYY_MM_DD_HH_MM_SS_SSS);
         // Sort by SignalTimestamp
@@ -52,13 +60,16 @@ public class TrilaterationSignalPreprocessor {
                 if(isFloorNotExcluded(signal.getBeacon())) {
                     // persist signal changes
                     signalRepository.save(signal);
-                    // grouping signals by signal-timestamp
-                    if (result.containsKey(sdf.format(signal.getSignalTimestamp()))) {
-                        result.get(sdf.format(signal.getSignalTimestamp())).add(signal);
-                    } else {
-                        ArrayList<Signal> newList = new ArrayList<>();
-                        newList.add(signal);
-                        result.put(sdf.format(signal.getSignalTimestamp()), newList);
+                    // only return signals if beaconSignalMinCount reached
+                    if(minBeaconSignalCountReachedInPeriod(signal, routeStartTime, routeEndTime)){
+                        // grouping signals by signal-timestamp
+                        if (result.containsKey(sdf.format(signal.getSignalTimestamp()))) {
+                            result.get(sdf.format(signal.getSignalTimestamp())).add(signal);
+                        } else {
+                            ArrayList<Signal> newList = new ArrayList<>();
+                            newList.add(signal);
+                            result.put(sdf.format(signal.getSignalTimestamp()), newList);
+                        }
                     }
                 }
             }
@@ -90,6 +101,24 @@ public class TrilaterationSignalPreprocessor {
         }
         return true;
     }
+
+    protected boolean minBeaconSignalCountReachedInPeriod(Signal signal, Date routeStartTime, Date routeEndTime) {
+        long count = 0;
+        if (beaconSignalsMinCountPeriod == 0) {
+            count = signalRepository.countByBeaconAndSignalTimestampBetween(signal.getBeacon(), routeStartTime, routeEndTime);
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(signal.getSignalTimestamp());
+            calendar.add(Calendar.SECOND, -(beaconSignalsMinCountPeriod/2));
+            Date start = calendar.getTime();
+            calendar.setTime(signal.getSignalTimestamp());
+            calendar.add(Calendar.SECOND, beaconSignalsMinCountPeriod/2);
+            Date end = calendar.getTime();
+            count = signalRepository.countByBeaconAndSignalTimestampBetween(signal.getBeacon(), start, end);
+        }
+        return count >= beaconSignalsMinCount;
+    }
+
 
     private BigDecimal calculateDistance(Double rssi, Integer txPower) {
         // source https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/

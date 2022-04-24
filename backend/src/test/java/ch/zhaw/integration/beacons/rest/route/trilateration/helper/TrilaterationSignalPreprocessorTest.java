@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class TrilaterationSignalPreprocessorTest {
@@ -34,59 +37,60 @@ public class TrilaterationSignalPreprocessorTest {
     private BeaconRepository beaconRepository;
     @Mock
     private SignalRepository signalRepository;
-    private final String[] floorsToIgnore = {"0", "-1", "-3" };
-    private final String distCalcEnvironmentalFactor = "4";
+
+    private SimpleDateFormat sdf;
 
     @BeforeEach
     public void setUp() {
-        sut = new TrilaterationSignalPreprocessor(floorsToIgnore, distCalcEnvironmentalFactor, beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0", beaconRepository, signalRepository);
+        sdf = new SimpleDateFormat(DateUtils.YYYY_MM_DD_HH_MM_SS_SSS);
     }
 
     @Test
     public void preprocessTEST() throws ParseException {
         // Given
-        SimpleDateFormat sdf = new SimpleDateFormat(DateUtils.YYYY_MM_DD_HH_MM_SS_SSS);
         List<Signal> rawSignals = new ArrayList<>();
-        // Signals T1
         Date t1 = sdf.parse("2022-04-21 18:00:00.000");
-        Signal signalT1Sbb1Ug2 = createSignal(rawSignals, t1, "1", "1", "-2", true);  // Result   T1
-        Signal signalT1Sbb2Ug2 = createSignal(rawSignals, t1, "1", "2", "-2", true);  // Result   T1
-        Signal signalT1Sbb3Ug2 = createSignal(rawSignals, t1, "1", "3", "-2", true);  // Result   T1
-        createSignal(rawSignals, t1, "1", "4", "-3", true);  // Ignored  T1  Not Matching floor
-        createSignal(rawSignals, t1, "9", "999", null, false);  // Ignored  T1  Not Sbb Beacon
-        createSignal(rawSignals, t1, "9", "998", null, false);  // Ignored  T1  Not Sbb Beacon
-        // Signals T2 -> Result = 3
         Date t2 = sdf.parse("2022-04-21 18:00:00.200");
-        Signal signalT2Sbb1Ug2 = createSignal(rawSignals, t2, "1", "11", "-2", true);  // Result   T2
-        Signal signalT2Sbb2Ug2 = createSignal(rawSignals, t2, "1", "22", "-2", true);  // Result   T2
-        Signal signalT2Sbb3Ug2 = createSignal(rawSignals, t2, "1", "33", "-2", true);  // Result   T2
-        createSignal(rawSignals, t2, "1", "44", "-1", true);  // Ignored  T2  Not Matching floor
-        createSignal(rawSignals, t2, "99", "999", null, false);  // Ignored  T2  Not Sbb Beacon
-        createSignal(rawSignals, t2, "99", "998", null, false);  // Ignored  T2  Not Sbb Beacon
-        // Signals T3 -> Result = 5
         Date t3 = sdf.parse("2022-04-21 18:00:00.400");
-        Signal signalT3Sbb1Ug2 = createSignal(rawSignals, t3, "1", "111", "-2", true);  // Result   T3
-        Signal signalT3Sbb2Ug2 = createSignal(rawSignals, t3, "1", "222", "-2", true);  // Result   T3
-        Signal signalT3Sbb3Ug2 = createSignal(rawSignals, t3, "1", "333", "-2", true);  // Result   T3
-        Signal signalT3Sbb4Ug2 = createSignal(rawSignals, t3, "1", "555", "-2", true);  // Result   T3
-        Signal signalT3Sbb5Ug2 = createSignal(rawSignals, t3, "1", "666", "-2", true);  // Result   T3
-        createSignal(rawSignals, t3, "1", "444", "0", true);  // Ignored  T3  Not Matching floor
-        createSignal(rawSignals, t2, "999", "999", null, false);  // Ignored  T3  Not Sbb Beacon
-        createSignal(rawSignals, t2, "999", "998", null, false);  // Ignored  T3  Not Sbb Beacon
-        // Signals T4 -> Result = 2
         Date t4 = sdf.parse("2022-04-21 18:00:00.600");
-        Signal signalT4Sbb1Ug2 = createSignal(rawSignals, t4, "1", "1111", "-2", true);  // Result   T4
-        Signal signalT4Sbb2Ug2 = createSignal(rawSignals, t4, "1", "2222", "-2", true);  // Result   T4
-        createSignal(rawSignals, t3, "1", "4444", "0", true);  // Ignored  T3  Not Matching floor
-        createSignal(rawSignals, t4, "9999", "999", null, false);  // Ignored  T3  Not Sbb Beacon
-        createSignal(rawSignals, t4, "9999", "998", null, false);  // Ignored  T3  Not Sbb Beacon
-        // Signals T5 -> Result = 0
         Date t5 = sdf.parse("2022-04-21 18:00:00.800");
-        createSignal(rawSignals, t5, "1", "44444", "0", true);  // Ignored  T3  Not Matching floor
-        createSignal(rawSignals, t5, "9999", "999", null, false);  // Ignored  T3  Not Sbb Beacon
-        createSignal(rawSignals, t5, "9999", "998", null, false);  // Ignored  T3  Not Sbb Beacon
+
+        // Signals T1
+        Signal signalT1Sbb1Ug2 = createSignal(rawSignals, t1, "1", "1", "-2", true, false, t1, t5);  // Result   T1
+        Signal signalT1Sbb2Ug2 = createSignal(rawSignals, t1, "1", "2", "-2", true, false, t1, t5);  // Result   T1
+        Signal signalT1Sbb3Ug2 = createSignal(rawSignals, t1, "1", "3", "-2", true, false, t1, t5);  // Result   T1
+        createSignal(rawSignals, t1, "1", "4", "-3", true, false, t1, t5);  // Ignored  T1  Not Matching floor
+        createSignal(rawSignals, t1, "9", "999", null, false, false, t1, t5);  // Ignored  T1  Not Sbb Beacon
+        createSignal(rawSignals, t1, "9", "998", null, false, false, t1, t5);  // Ignored  T1  Not Sbb Beacon
+        // Signals T2 -> Result = 3
+        Signal signalT2Sbb1Ug2 = createSignal(rawSignals, t2, "1", "11", "-2", true, false, t1, t5);  // Result   T2
+        Signal signalT2Sbb2Ug2 = createSignal(rawSignals, t2, "1", "22", "-2", true, false, t1, t5);  // Result   T2
+        Signal signalT2Sbb3Ug2 = createSignal(rawSignals, t2, "1", "33", "-2", true, false, t1, t5);  // Result   T2
+        createSignal(rawSignals, t2, "1", "44", "-1", true, false, t1, t5);  // Ignored  T2  Not Matching floor
+        createSignal(rawSignals, t2, "99", "999", null, false, false, t1, t5);  // Ignored  T2  Not Sbb Beacon
+        createSignal(rawSignals, t2, "99", "998", null, false, false, t1, t5);  // Ignored  T2  Not Sbb Beacon
+        // Signals T3 -> Result = 5
+        Signal signalT3Sbb1Ug2 = createSignal(rawSignals, t3, "1", "111", "-2", true, false, t1, t5);  // Result   T3
+        Signal signalT3Sbb2Ug2 = createSignal(rawSignals, t3, "1", "222", "-2", true, false, t1, t5);  // Result   T3
+        Signal signalT3Sbb3Ug2 = createSignal(rawSignals, t3, "1", "333", "-2", true, false, t1, t5);  // Result   T3
+        Signal signalT3Sbb4Ug2 = createSignal(rawSignals, t3, "1", "555", "-2", true, false, t1, t5);  // Result   T3
+        Signal signalT3Sbb5Ug2 = createSignal(rawSignals, t3, "1", "666", "-2", true, false, t1, t5);  // Result   T3
+        createSignal(rawSignals, t3, "1", "444", "0", true, false, t1, t5);  // Ignored  T3  Not Matching floor
+        createSignal(rawSignals, t2, "999", "999", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
+        createSignal(rawSignals, t2, "999", "998", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
+        // Signals T4 -> Result = 2
+        Signal signalT4Sbb1Ug2 = createSignal(rawSignals, t4, "1", "1111", "-2", true, false, t1, t5);  // Result   T4
+        Signal signalT4Sbb2Ug2 = createSignal(rawSignals, t4, "1", "2222", "-2", true, false, t1, t5);  // Result   T4
+        createSignal(rawSignals, t3, "1", "4444", "0", true, false, t1, t5);  // Ignored  T3  Not Matching floor
+        createSignal(rawSignals, t4, "9999", "999", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
+        createSignal(rawSignals, t4, "9999", "998", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
+        // Signals T5 -> Result = 0
+        createSignal(rawSignals, t5, "1", "44444", "0", true, false, t1, t5);  // Ignored  T3  Not Matching floor
+        createSignal(rawSignals, t5, "9999", "999", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
+        createSignal(rawSignals, t5, "9999", "998", null, false, false, t1, t5);  // Ignored  T3  Not Sbb Beacon
         // When
-        Map<String, List<Signal>> result = sut.preprocess(rawSignals);
+        Map<String, List<Signal>> result = sut.preprocess(rawSignals, t1, t5);
         // Then
         assertEquals(4, result.entrySet().size()); // assert 4 groups of signals grouped by timestamp T1, T2, T3, T4
         // assert result 3 signals for T1
@@ -141,7 +145,7 @@ public class TrilaterationSignalPreprocessorTest {
     @Test
     public void enrichSignalWithCalculatedDistanceTESTenvironmentalFactor2() {
         // Given
-        sut = new TrilaterationSignalPreprocessor(floorsToIgnore, "2", beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "2", "1", "20", beaconRepository, signalRepository);
         Integer txPower = -69;
 
         Signal signal035meter = new Signal();
@@ -163,12 +167,12 @@ public class TrilaterationSignalPreprocessorTest {
         sut.enrichSignalWithCalculatedDistance(signal1meter);
         sut.enrichSignalWithCalculatedDistance(signal354meter);
         // Then
-        assertEquals(0.35481338923357547, signal035meter.getCalculatedDistance());
-        assertEquals(0.35481338923357547, signal035meter.getCalculatedDistanceSlidingWindow());
-        assertEquals(1.0, signal1meter.getCalculatedDistance());
-        assertEquals(1.0, signal1meter.getCalculatedDistanceSlidingWindow());
-        assertEquals(3.548133892335755, signal354meter.getCalculatedDistance());
-        assertEquals(3.548133892335755, signal354meter.getCalculatedDistanceSlidingWindow());
+        assertEquals(BigDecimal.valueOf(0.35481338923357547), signal035meter.getCalculatedDistance());
+        assertEquals(BigDecimal.valueOf(0.35481338923357547), signal035meter.getCalculatedDistanceSlidingWindow());
+        assertEquals(BigDecimal.valueOf(1.0), signal1meter.getCalculatedDistance());
+        assertEquals(BigDecimal.valueOf(1.0), signal1meter.getCalculatedDistanceSlidingWindow());
+        assertEquals(BigDecimal.valueOf(3.548133892335755), signal354meter.getCalculatedDistance());
+        assertEquals(BigDecimal.valueOf(3.548133892335755), signal354meter.getCalculatedDistanceSlidingWindow());
     }
 
     @Test
@@ -194,7 +198,45 @@ public class TrilaterationSignalPreprocessorTest {
         assertFalse(resultUg3);
     }
 
-    private Signal createSignal(List<Signal> signals, Date signalTimestamp, String major, String minor, String floor, boolean isSbbBeacon) {
+    @Test
+    public void minBeaconSignalCountReachedInPeriodTESTperiodPropertyNot0() throws ParseException {
+        // Given
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "20", beaconRepository, signalRepository);
+        Date routeStart = sdf.parse("2022-04-21 18:27:00.000");
+        Date routeEnd = sdf.parse("2022-04-21 18:30:00.000");
+        Date signalTimestamp =  sdf.parse("2022-04-21 18:28:30.200");
+        Date t1 =  sdf.parse("2022-04-21 18:28:20.200");
+        Date t2 =  sdf.parse("2022-04-21 18:28:40.200");
+        Signal signal = mock(Signal.class);
+        Beacon beacon = mock(Beacon.class);
+        given(signal.getBeacon()).willReturn(beacon);
+        given(signal.getSignalTimestamp()).willReturn(signalTimestamp);
+        given(signalRepository.countByBeaconAndSignalTimestampBetween(beacon, t1, t2)).willReturn(1L);
+        // When
+        boolean result = sut.minBeaconSignalCountReachedInPeriod(signal, routeStart, routeEnd);
+        // Then
+        verify(signalRepository, times(1)).countByBeaconAndSignalTimestampBetween(beacon, t1, t2);
+        assertFalse(result);
+    }
+
+    @Test
+    public void minBeaconSignalCountReachedInPeriodTESTperiodProperty0() throws ParseException {
+        // Given
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0", beaconRepository, signalRepository);
+        Date routeStart = sdf.parse("2022-04-21 18:27:00.000");
+        Date routeEnd = sdf.parse("2022-04-21 18:30:00.000");
+        Signal signal = mock(Signal.class);
+        Beacon beacon = mock(Beacon.class);
+        given(signal.getBeacon()).willReturn(beacon);
+        given(signalRepository.countByBeaconAndSignalTimestampBetween(beacon, routeStart, routeEnd)).willReturn(3L);
+        // When
+        boolean result = sut.minBeaconSignalCountReachedInPeriod(signal, routeStart, routeEnd);
+        // Then
+        verify(signalRepository, times(1)).countByBeaconAndSignalTimestampBetween(beacon, routeStart, routeEnd);
+        assertTrue(result);
+    }
+
+    private Signal createSignal(List<Signal> signals, Date signalTimestamp, String major, String minor, String floor, boolean isSbbBeacon, boolean withBeacon, Date routeStart, Date routeEnd) {
         Signal signal = new Signal();
         signal.setSignalTimestamp(signalTimestamp);
         signal.setTxPower(-69);
@@ -207,7 +249,14 @@ public class TrilaterationSignalPreprocessorTest {
             beacon.setFloor(floor);
             beacon.setMajor(major);
             beacon.setMinor(minor);
+            if(withBeacon) {
+                beacon.setId(Long.valueOf(minor));
+                signal.setBeacon(beacon);
+            }
             given(beaconRepository.findBeaconByMajorAndMinor(major, minor)).willReturn(beacon);
+            if (floor.equals("-2")) {
+                given(signalRepository.countByBeaconAndSignalTimestampBetween(beacon, routeStart, routeEnd)).willReturn(3L);
+            }
         } else {
             given(beaconRepository.findBeaconByMajorAndMinor(major, minor)).willReturn(null);
         }

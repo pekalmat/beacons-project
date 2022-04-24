@@ -42,7 +42,7 @@ public class TrilaterationRouteCalculator {
         // read all Signals collected by device in given time period
         List<Signal> rawSignals = signalRepository.findAllByDeviceAndSignalTimestampBetween(device, routeStartTime, routeEndTime);
         // Calculated Distances and connect signal with known beacons -> only return connected signals
-        Map<String, List<Signal>> signals =  trilaterationPreprocessor.preprocess(rawSignals);
+        Map<String, List<Signal>> signals =  trilaterationPreprocessor.preprocess(rawSignals, routeStartTime, routeEndTime);
 
         // 1 Calculate Route WITHOUT SIGNAL-SMOOTHING based on CALCULATED-DISTANCE using own formula based on RSSI & TXPOWER
         trilaterateRoute(CalculationMethod.TRILATERATION_NO_SMOOTHING, triggerTime, device, signals).ifPresent(result::add);

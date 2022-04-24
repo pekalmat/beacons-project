@@ -57,14 +57,14 @@ public class TrilaterationRouteCalculatorTest {
         given(signalRepository.findAllByDeviceAndSignalTimestampBetween(device, routeStartTime, routeEndTime)).willReturn(rawSignals);
         Map<String, List<Signal>> preprocessedSignals = new HashMap<>();
         preprocessedSignals.put("2022.04.17", rawSignals);
-        given(trilaterationPreprocessor.preprocess(rawSignals)).willReturn(preprocessedSignals);
+        given(trilaterationPreprocessor.preprocess(rawSignals, routeStartTime, routeEndTime)).willReturn(preprocessedSignals);
         given(positionCalculator.calculatePositions(any(), any(), any())).willReturn(List.of(mock(Position.class)));
         given(routeRepository.save(any())).willReturn(mock(Route.class));
         // When
         sut.calculateRoutesForDevice(device, routeStartTime, routeEndTime, routeTriggerTime);
         // Then
         verify(signalRepository, times(1)).findAllByDeviceAndSignalTimestampBetween(device, routeStartTime, routeEndTime);
-        verify(trilaterationPreprocessor, times(1)).preprocess(rawSignals);
+        verify(trilaterationPreprocessor, times(1)).preprocess(rawSignals, routeStartTime, routeEndTime);
         verify(positionCalculator, times(1)).calculatePositions(eq(CalculationMethod.TRILATERATION_NO_SMOOTHING), eq(preprocessedSignals), any(Route.class));
         verify(positionCalculator, times(1)).calculatePositions(eq(CalculationMethod.TRILATERATION_SLIDING_WINDOW), eq(preprocessedSignals), any(Route.class));
         verify(routeRepository, times(2)).save(any());
