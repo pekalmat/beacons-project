@@ -1,0 +1,1 @@
+Informationen über das Projekt und Setup-Steps befinden sich unter: https://github.com/pekalmat/beacons-project/wiki
