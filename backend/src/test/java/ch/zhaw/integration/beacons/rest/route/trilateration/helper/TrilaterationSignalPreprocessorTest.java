@@ -42,7 +42,7 @@ public class TrilaterationSignalPreprocessorTest {
 
     @BeforeEach
     public void setUp() {
-        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0", beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0", "0.0", beaconRepository, signalRepository);
         sdf = new SimpleDateFormat(DateUtils.YYYY_MM_DD_HH_MM_SS_SSS);
     }
 
@@ -145,7 +145,7 @@ public class TrilaterationSignalPreprocessorTest {
     @Test
     public void enrichSignalWithCalculatedDistanceTESTenvironmentalFactor2() {
         // Given
-        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "2", "1", "20", beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "2", "1", "20","0.0", beaconRepository, signalRepository);
         Integer txPower = -69;
 
         Signal signal035meter = new Signal();
@@ -176,6 +176,44 @@ public class TrilaterationSignalPreprocessorTest {
     }
 
     @Test
+    public void enrichSignalWithCalculatedDistanceTESTenvironmentalFactorInvestigation() {
+        // Given Signals
+        Integer txPower = -61;
+        //      minor 5986 -> 1m -> txPower=-61, rssi=-58, runningAverageRssi=-56.96551724137931
+        Signal signal1meter = new Signal();
+        signal1meter.setRssi(-58);
+        signal1meter.setRunningAverageRssi(-56.96551724137931);
+        signal1meter.setTxPower(txPower);
+        //      minor 5971 -> 3m -> txPower=-61, rssi=-61, runningAverageRssi=-65.78260869565217
+        Signal signal3meter = new Signal();
+        signal3meter.setRssi(-61);
+        signal3meter.setRunningAverageRssi(-65.78260869565217);
+        signal3meter.setTxPower(txPower);
+        //      minor 9749 -> 5m -> txPower=-61, rssi=-65, runningAverageRssi=-65.96428571428571
+        Signal signal5meter = new Signal();
+        signal5meter.setRssi(-65);
+        signal5meter.setRunningAverageRssi(-65.96428571428571);
+        signal5meter.setTxPower(txPower);
+        // When
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "0.6", "1", "20","0.0", beaconRepository, signalRepository);
+        sut.enrichSignalWithCalculatedDistance(signal1meter);
+        sut.enrichSignalWithCalculatedDistance(signal3meter);
+        sut.enrichSignalWithCalculatedDistance(signal5meter);
+        // Then
+        System.out.println("###### Results #########");
+        System.out.println("## Beacon 1m away:");
+        System.out.println("Dist:   " + signal1meter.getCalculatedDistance());
+        System.out.println("SLDist: " + signal1meter.getCalculatedDistanceSlidingWindow());
+        System.out.println("## Beacon 3m away:");
+        System.out.println("Dist:   " + signal3meter.getCalculatedDistance());
+        System.out.println("SLDist: " + signal3meter.getCalculatedDistanceSlidingWindow());
+        System.out.println("## Beacon 5m away:");
+        System.out.println("Dist:   " + signal5meter.getCalculatedDistance());
+        System.out.println("SLDist: " + signal5meter.getCalculatedDistanceSlidingWindow());
+        //        assertEquals(BigDecimal.valueOf(0.35481338923357547), signal035meter.getCalculatedDistance());
+    }
+
+    @Test
     public void isFloorNotExcludedTESTignoreEgUg1Ug3() {
         // Given
         Beacon beaconEg = new Beacon();
@@ -201,7 +239,7 @@ public class TrilaterationSignalPreprocessorTest {
     @Test
     public void minBeaconSignalCountReachedInPeriodTESTperiodPropertyNot0() throws ParseException {
         // Given
-        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "20", beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "20","0.0", beaconRepository, signalRepository);
         Date routeStart = sdf.parse("2022-04-21 18:27:00.000");
         Date routeEnd = sdf.parse("2022-04-21 18:30:00.000");
         Date signalTimestamp =  sdf.parse("2022-04-21 18:28:30.200");
@@ -222,7 +260,7 @@ public class TrilaterationSignalPreprocessorTest {
     @Test
     public void minBeaconSignalCountReachedInPeriodTESTperiodProperty0() throws ParseException {
         // Given
-        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0", beaconRepository, signalRepository);
+        sut = new TrilaterationSignalPreprocessor(new String[]{"0", "-1", "-3"}, "4", "2", "0","0.0", beaconRepository, signalRepository);
         Date routeStart = sdf.parse("2022-04-21 18:27:00.000");
         Date routeEnd = sdf.parse("2022-04-21 18:30:00.000");
         Signal signal = mock(Signal.class);

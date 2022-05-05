@@ -22,9 +22,10 @@ import java.util.Map;
 public class TrilaterationSignalPreprocessor {
 
     private final String[] floorsToIgnore;
-    private final int distCalcEnvironmentalFactor;
+    private final Double distCalcEnvironmentalFactor;
     private final int beaconSignalsMinCount;
     private final int beaconSignalsMinCountPeriod;
+    private final BigDecimal beaconSignalMinDistance;
     private final BeaconRepository beaconRepository;
     private final SignalRepository signalRepository;
 
@@ -33,12 +34,14 @@ public class TrilaterationSignalPreprocessor {
             @Value("${beacons.trilateration.distance.calculation.environmental.factor}") String distCalcEnvironmentalFactor,
             @Value("${beacons.trilateration.beacon.signal.min.count}")  String beaconSignalsMinCount,
             @Value("${beacons.trilateration.beacon.signal.min.count.period}") String beaconSignalsMinCountPeriod,
+            @Value("${beacons.trilatration.beacon.min.distance}") String beaconSignalMinDistance,
             BeaconRepository beaconRepository,
             SignalRepository signalRepository) {
         this.floorsToIgnore = floorsToIgnore;
-        this.distCalcEnvironmentalFactor = Integer.parseInt(distCalcEnvironmentalFactor);
+        this.distCalcEnvironmentalFactor = Double.parseDouble(distCalcEnvironmentalFactor);
         this.beaconSignalsMinCount = Integer.parseInt(beaconSignalsMinCount);
         this.beaconSignalsMinCountPeriod = Integer.parseInt(beaconSignalsMinCountPeriod);
+        this.beaconSignalMinDistance = BigDecimal.valueOf(Double.parseDouble(beaconSignalMinDistance));
         this.beaconRepository = beaconRepository;
         this.signalRepository = signalRepository;
     }
@@ -62,13 +65,16 @@ public class TrilaterationSignalPreprocessor {
                     signalRepository.save(signal);
                     // only return signals if beaconSignalMinCount reached
                     if(minBeaconSignalCountReachedInPeriod(signal, routeStartTime, routeEndTime)){
-                        // grouping signals by signal-timestamp
-                        if (result.containsKey(sdf.format(signal.getSignalTimestamp()))) {
-                            result.get(sdf.format(signal.getSignalTimestamp())).add(signal);
-                        } else {
-                            ArrayList<Signal> newList = new ArrayList<>();
-                            newList.add(signal);
-                            result.put(sdf.format(signal.getSignalTimestamp()), newList);
+                        // only return signals if minCalcDistance is reached
+                        if(signal.getCalculatedDistance().compareTo(beaconSignalMinDistance) >= 0 ) {
+                            // grouping signals by signal-timestamp
+                            if (result.containsKey(sdf.format(signal.getSignalTimestamp()))) {
+                                result.get(sdf.format(signal.getSignalTimestamp())).add(signal);
+                            } else {
+                                ArrayList<Signal> newList = new ArrayList<>();
+                                newList.add(signal);
+                                result.put(sdf.format(signal.getSignalTimestamp()), newList);
+                            }
                         }
                     }
                 }
@@ -122,8 +128,8 @@ public class TrilaterationSignalPreprocessor {
 
     private BigDecimal calculateDistance(Double rssi, Integer txPower) {
         // source https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
-        int n = distCalcEnvironmentalFactor; // N (Constant depends on the Environmental factor. Range 2-4) -> in Indoor Environments usualy 4 due to lot of Noise
-        return BigDecimal.valueOf(Math.pow(10, ((Double.valueOf(txPower) - rssi)) / (10 * n)));
+        Double n = distCalcEnvironmentalFactor; // N (Constant depends on the Environmental factor. Range 2-4) -> in Indoor Environments usualy 4 due to lot of Noise
+        return BigDecimal.valueOf(Math.pow(10, ((Double.valueOf(txPower) - rssi)) / (10.0 * n)));
     }
 
 }

@@ -34,15 +34,6 @@ public class AbstractPositionCalculatorTest {
                 BigDecimal.valueOf(1.41421356237), BigDecimal.valueOf(5.0), BigDecimal.valueOf(3.0),
                 BigDecimal.valueOf(1.4), BigDecimal.valueOf(4.0), BigDecimal.valueOf(5.4));
         */
-
-        // Test Case 3
-        // Test Case 4
-        // Test Case 5
-        // Test Case 6
-        // Test Case 7
-        // Test Case 8
-        // Test Case 9
-        // Test Case 10
     }
 
     private void checkTestCase(BigDecimal xExpected, BigDecimal yExpected,
