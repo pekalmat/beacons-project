@@ -2,8 +2,8 @@ package ch.zhaw.integration.beacons.service.route.trilateration.calculator.combi
 
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.service.route.trilateration.calculator.AbstractPositionCalculator;
+import ch.zhaw.integration.beacons.service.route.trilateration.calculator.algorithm.StackoverflowTrilaterationAlgorithm;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
-import ch.zhaw.integration.beacons.utils.Calculator;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
@@ -14,8 +14,8 @@ import java.util.Map;
 @Component
 public class CombinedSmoothingPositionCalculator extends AbstractPositionCalculator {
 
-    public CombinedSmoothingPositionCalculator(Calculator calculator) {
-        super(calculator);
+    public CombinedSmoothingPositionCalculator(StackoverflowTrilaterationAlgorithm trilaterationAlgorithm) {
+        super(trilaterationAlgorithm);
     }
 
     @Override

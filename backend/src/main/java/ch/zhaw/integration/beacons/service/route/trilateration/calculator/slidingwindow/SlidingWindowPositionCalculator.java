@@ -2,10 +2,10 @@ package ch.zhaw.integration.beacons.service.route.trilateration.calculator.slidi
 
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.service.route.trilateration.calculator.AbstractPositionCalculator;
-import ch.zhaw.integration.beacons.service.route.trilateration.helper.comparator.SignalCalculatedDistanceSlidingWindowComparator;
+import ch.zhaw.integration.beacons.service.route.trilateration.calculator.algorithm.StackoverflowTrilaterationAlgorithm;
 import ch.zhaw.integration.beacons.service.route.trilateration.helper.TrilaterationSignalPartitioner;
+import ch.zhaw.integration.beacons.service.route.trilateration.helper.comparator.SignalCalculatedDistanceSlidingWindowComparator;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
-import ch.zhaw.integration.beacons.utils.Calculator;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +19,8 @@ public class SlidingWindowPositionCalculator extends AbstractPositionCalculator 
     private final TrilaterationSignalPartitioner trilaterationSignalPartitioner;
     private final SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator;
 
-    public SlidingWindowPositionCalculator(Calculator calculator, TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator) {
-        super(calculator);
+    public SlidingWindowPositionCalculator(StackoverflowTrilaterationAlgorithm trilaterationAlgorithm, TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator) {
+        super(trilaterationAlgorithm);
         this.trilaterationSignalPartitioner = trilaterationSignalPartitioner;
         this.signalCalculatedDistanceSlidingWindowComparator = signalCalculatedDistanceSlidingWindowComparator;
     }

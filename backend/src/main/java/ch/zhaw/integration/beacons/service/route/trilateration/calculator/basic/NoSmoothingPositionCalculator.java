@@ -2,10 +2,10 @@ package ch.zhaw.integration.beacons.service.route.trilateration.calculator.basic
 
 import ch.zhaw.integration.beacons.entities.signal.Signal;
 import ch.zhaw.integration.beacons.service.route.trilateration.calculator.AbstractPositionCalculator;
+import ch.zhaw.integration.beacons.service.route.trilateration.calculator.algorithm.StackoverflowTrilaterationAlgorithm;
 import ch.zhaw.integration.beacons.service.route.trilateration.helper.TrilaterationSignalPartitioner;
 import ch.zhaw.integration.beacons.service.route.trilateration.helper.comparator.SignalCalculatedDistanceComparator;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
-import ch.zhaw.integration.beacons.utils.Calculator;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +19,8 @@ public class NoSmoothingPositionCalculator extends AbstractPositionCalculator {
     private final TrilaterationSignalPartitioner trilaterationSignalPartitioner;
     private final SignalCalculatedDistanceComparator signalCalculatedDistanceComparator;
 
-    public NoSmoothingPositionCalculator(Calculator calculator, TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceComparator signalCalculatedDistanceComparator) {
-        super(calculator);
+    public NoSmoothingPositionCalculator(StackoverflowTrilaterationAlgorithm trilaterationAlgorithm, TrilaterationSignalPartitioner trilaterationSignalPartitioner, SignalCalculatedDistanceComparator signalCalculatedDistanceComparator) {
+        super(trilaterationAlgorithm);
         this.trilaterationSignalPartitioner = trilaterationSignalPartitioner;
         this.signalCalculatedDistanceComparator = signalCalculatedDistanceComparator;
     }

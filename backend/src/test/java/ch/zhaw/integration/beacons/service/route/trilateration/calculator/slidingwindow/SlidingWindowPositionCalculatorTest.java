@@ -4,6 +4,7 @@ import ch.zhaw.integration.beacons.entities.beacon.Beacon;
 import ch.zhaw.integration.beacons.entities.position.Position;
 import ch.zhaw.integration.beacons.entities.route.Route;
 import ch.zhaw.integration.beacons.entities.signal.Signal;
+import ch.zhaw.integration.beacons.service.route.trilateration.calculator.algorithm.StackoverflowTrilaterationAlgorithm;
 import ch.zhaw.integration.beacons.service.route.trilateration.helper.TrilaterationSignalPartitioner;
 import ch.zhaw.integration.beacons.service.route.trilateration.helper.comparator.SignalCalculatedDistanceSlidingWindowComparator;
 import ch.zhaw.integration.beacons.utils.CalculationMethod;
@@ -40,12 +41,14 @@ public class SlidingWindowPositionCalculatorTest {
     @Mock
     private SignalCalculatedDistanceSlidingWindowComparator signalCalculatedDistanceSlidingWindowComparator;
 
+    private StackoverflowTrilaterationAlgorithm trilaterationAlgorithm;
     private Calculator calculator;
 
     @BeforeEach
     public void setUp() {
         calculator = new Calculator(30);
-        sut = new SlidingWindowPositionCalculator(calculator, trilaterationSignalPartitioner, signalCalculatedDistanceSlidingWindowComparator);
+        trilaterationAlgorithm = new StackoverflowTrilaterationAlgorithm(calculator);
+        sut = new SlidingWindowPositionCalculator(trilaterationAlgorithm, trilaterationSignalPartitioner, signalCalculatedDistanceSlidingWindowComparator);
     }
 
     @Test
