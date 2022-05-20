@@ -6,379 +6,322 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.example.trackingapp.requests.CustomJsonArrayRequest;
+import com.example.trackingapp.requests.CustomJsonObjectRequest;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
-public class MainActivity extends AppCompatActivity  implements MonitorNotifier, RangeNotifier {
-    protected static final String TAG =  "########## MainActivity ##########";
-    private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
-    private static final int PERMISSION_REQUEST_BACKGROUND_LOCATION = 2;
-    private final BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 
-    private static final String HOST = "http://192.168.1.188:8081";
-    private static final String POST_NEW_TREATMENT_REQUEST_URL = HOST + "/beacons/api/internal/treatments";
-    private static final String GET_ALL_BEACONS_URL = HOST + "/beacons/api/internal/beacons";
-    private static final String MOCK_LOGIN_REQUEST_URL = HOST + "/beacons/api/public/doctors/login";
+import static com.example.trackingapp.constants.Constants.*;
 
-    private boolean currentlyRanging = false;
+public class MainActivity extends AppCompatActivity  implements  RangeNotifier {
+
+    // Logger-TAG
+    private static final String TAG =  "########## MainActivity ##########";
+
+    // API-Request
     private String sessionBearerToken;
     private RequestQueue requestQueue;
+    private String deviceFingerPrint;
+    // Beacon-Manager / Scanner
+    private BeaconManager beaconManager;
+    private static Long detectedSignalsCount;
+    private long beaconManagerScanPeriod;
+    // RANGING-STATUS ON/OFF
+    private boolean currentlyRanging;
+    //
+    private SimpleDateFormat dateFormat;
 
-    private List<BeaconDto> knownBeaconsToTrack = new ArrayList<>();
-    private BeaconDto currentlyTrackedBeacon;
-    private Date currentTrackingStartTime;
-
-
+    //
+    //
+    // App-Init
+    //
+    //
+    @SuppressLint("SimpleDateFormat")
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        Log.i(TAG, LOG_ON_CREATE);
         setContentView(R.layout.activity_main);
+        createDefaultUncaughtExceptionHandler();
+
+        detectedSignalsCount = 0L;
+        beaconManagerScanPeriod = 100;
+        currentlyRanging = false;
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS'Z'");
+        requestQueue = Volley.newRequestQueue(this);
+
         verifyBluetooth();
         requestPermissions();
-        requestQueue = Volley.newRequestQueue(this);
+
         // Mock a Login because of authorization check for data fetching/manipulation apis
-        mockLoginAndFetchBeacons();
-        BeaconManager.getInstanceForApplication(this).addMonitorNotifier(this);
-        if (TrackingApplication.insideRegion) {
-            updateText("Beacons are visible.");
-        }
-        else {
-            updateText("No beacons are visible.");
+        updateApplicationStatusText(LOGIN_IN_PROGRESS_STATUS);
+        requestMockLoginToGetBearerTokenAndRegisterDevice();
+
+        // Setup beaconManager
+        initializeBeaconManager();
+    }
+
+    private void createDefaultUncaughtExceptionHandler() {
+        // https://stackoverflow.com/questions/27829955/android-handle-application-crash-and-start-a-particular-activity
+        Thread.setDefaultUncaughtExceptionHandler(
+                (thread, e) -> Sentry.captureMessage("UncaughtExceptionFound:" + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR)
+        );
+    }
+
+    private void initializeBeaconManager() {
+        updateApplicationStatusText(INITIALIZING_BEACON_SCANNER);
+        beaconManager = org.altbeacon.beacon.BeaconManager.getInstanceForApplication(this);
+        // By default the AndroidBeaconLibrary will only find AltBeacons.  f you wish to make it
+        // find a different type of beacon, you must specify the byte layout for that beacon's
+        // advertisement with a line like below.  The example shows how to find a beacon with the
+        // same byte layout as AltBeacon but with a beaconTypeCode of 0xaabb.  To find the proper
+        // layout expression for other beacon types, do a web search for "setBeaconLayout"
+        // including the quotes.
+        //cut out (,d:25-25)
+        beaconManager.getBeaconParsers().clear();
+
+        // add BeaconParser for     //      IBEACON             "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24")));
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")));
+        // add BeaconParser for     //      ALTBEACON           "m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  UID      "s:0-1=feaa,m:2-2=00,p:3-3:-41,i:4-13,i:14-19"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  TLM      "x,s:0-1=feaa,m:2-2=20,d:3-3,d:4-5,d:6-7,d:8-11,d:12-15"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_TLM_LAYOUT));
+        // add BeaconParser for     //      EDDYSTONE  URL      "s:0-1=feaa,m:2-2=10,p:3-3:-41,i:4-20v"
+        beaconManager.getBeaconParsers().add( new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
+        BeaconManager.setDebug(false);
+
+        Notification.Builder builder = new Notification.Builder(this);
+        builder.setContentTitle("Scanning for Beacons");
+        Intent intent = new Intent(this, MainActivity.class);
+        @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+        NotificationChannel channel = new NotificationChannel("My Notification Channel ID", "My Notification Name", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("My Notification Channel Description");
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.createNotificationChannel(channel);
+        builder.setChannelId(channel.getId());
+
+        beaconManager.enableForegroundServiceScanning(builder.build(), 456);
+        beaconManager.setEnableScheduledScanJobs(false);
+        beaconManager.setBackgroundBetweenScanPeriod(0);
+        beaconManager.setBackgroundScanPeriod(beaconManagerScanPeriod);
+        beaconManager.setForegroundBetweenScanPeriod(0);
+        beaconManager.setForegroundScanPeriod(beaconManagerScanPeriod);
+
+        Log.i(TAG, LOG_SCANNER_SETUP);
+
+        // If we were monitoring *different* regions on the last run of this app, they will be
+        // remembered.  In this case we need to disable them here
+        for (Region region: beaconManager.getMonitoredRegions()) {
+            beaconManager.stopMonitoring(region);
         }
     }
 
-    // Do Mock Login (get authorization header needed for Internal/Get/Post APIs
-    private void mockLoginAndFetchBeacons() {
-        JSONObject jsonBody;
+    private void requestMockLoginToGetBearerTokenAndRegisterDevice() {
         try {
-            jsonBody = new JSONObject(
-                    "{" +
-                            "\"email\":\"doctor1@example.com\"," +
-                            "\"password\":\"doctor1\"" +
-                            "}");
+            JSONObject jsonBody = new JSONObject()
+                .put("email", "admin@example.com")
+                .put("password", "admin");
             CustomJsonObjectRequest mockLoginRequest = new CustomJsonObjectRequest(
                     Request.Method.POST,
                     MOCK_LOGIN_REQUEST_URL,
                     null,
                     jsonBody,
                     response -> {
-                        Log.i(TAG, "MockLoginRequestResponse is: " + response.toString());
+                        Log.i(TAG, LOG_LOGIN_SUCCESSFUL);
                         try {
                             JSONObject headers = (JSONObject) response.get("headers");
                             String bearerToken = (String) headers.get("Authorization");
                             sessionBearerToken = "Bearer " + bearerToken;
-                            Log.i(TAG, "Trying to fetch Beacons now");
-                            fetchBeaconsToTrack();
+                            updateApplicationStatusText(LOGIN_SUCCESSFUL);
+                            requestRegisterDevice();
                         } catch (JSONException e) {
-                            Log.e(TAG, "Could not extract Authorization header from MockLoginRequest: error: " + e.getMessage());
+                            updateApplicationStatusText(ERROR_LOGIN_HEADER_EXTRACTION);
+                            logErrorToDisplay(e.toString());
+                            Log.e(TAG, LOG_LOGIN_AUTH_HEADER_ERROR + e);
+                            Sentry.captureMessage(LOG_LOGIN_AUTH_HEADER_ERROR + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
                         }
                     },
                     error -> {
-                        Log.e(TAG, "MockLoginRequestError is: " + error.getMessage());
+                        updateApplicationStatusText(ERROR_LOGIN_FAILED);
+                        logErrorToDisplay(error.toString());
+                        Log.e(TAG, LOG_LOGIN_ERROR + error);
+                        Sentry.captureMessage(LOG_LOGIN_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
                     }
             );
-            Log.i(TAG, "Trying to MockLogin");
+            Log.i(TAG, LOG_TRYING_LOGIN);
             requestQueue.add(mockLoginRequest);
         } catch (JSONException e) {
-            Log.e(TAG,"Could not perform Mock Login on startup.", e);
+            updateApplicationStatusText(ERROR_LOGIN_FAILED_REQUEST_BODY);
+            logErrorToDisplay(e.toString());
+            Log.e(TAG,ERROR_LOGIN_FAILED_REQUEST_BODY, e);
+            Sentry.captureMessage(ERROR_LOGIN_FAILED_REQUEST_BODY + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
         }
     }
 
-    // Fetch registered beacons
-    private void fetchBeaconsToTrack() {
-        // Create Json-PostRequest
-        CustomJsonArrayRequest jsonObjectRequest = new CustomJsonArrayRequest(
-                Request.Method.GET,
-                GET_ALL_BEACONS_URL,
-                sessionBearerToken,
-                null,
-                response -> {
-                    Gson gson = new Gson();
-                    Type listOfMyClassObject = new TypeToken<ArrayList<BeaconDto>>() {}.getType();
-                    knownBeaconsToTrack = gson.fromJson(response.toString(), listOfMyClassObject);
-                    Log.i(TAG, "Successfully fetched " + knownBeaconsToTrack.size() + " registered Beacons.");
-                },
-                error -> {
-                    Log.e(TAG,"Could Not Fetch Beacons");
-                    Log.e(TAG, error.toString());
-                });
-
-        // Add the Request to the RequestQueue.
-        requestQueue.add(jsonObjectRequest);
-    }
-
-    // Sends Post Request for Tracking Data Transmission
-    private void sendNewTreatmentPostRequest() {
-        // Create request JsonBody
-        JSONObject jsonBody = createPostRequestBody();
-        // Create Json-PostRequest
-        CustomJsonObjectRequest postNewTreatmentRequest = new CustomJsonObjectRequest(
-                Request.Method.POST,
-                POST_NEW_TREATMENT_REQUEST_URL,
-                sessionBearerToken,
-                jsonBody,
-                response -> {
-                    // TODO: get new token and update session token
-                    Log.i(TAG, "PostRequestResponse is: " + response.toString());
-                },
-                error -> Log.e(TAG, "PostRequestError: " + error.getMessage())
-        );
-        Log.i(TAG, "Send Tracking Data to server: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-        requestQueue.add(postNewTreatmentRequest);
-
-    }
-
-    // Create Request body for Tracking Data Transmission
-    private JSONObject createPostRequestBody() {
+    private void requestRegisterDevice() {
         try {
-            @SuppressLint("SimpleDateFormat") String startTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentTrackingStartTime);
-            Date endTime = java.util.Calendar.getInstance().getTime();
-            @SuppressLint("SimpleDateFormat") String endTimeString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(endTime);
-            Gson gson = new Gson();
-            String beaconJson = gson.toJson(currentlyTrackedBeacon);
-            JSONObject doctorJson = new JSONObject();
-            doctorJson.put("id", 2);
-            return new JSONObject(
-                    "{" +
-                            "\"startTime\":\"" + startTimeString + "\"," +
-                            "\"endTime\":\"" + endTimeString + "\"," +
-                            "\"doctor\":" + doctorJson.toString() + "," +
-                            "\"beacon\":" + beaconJson +
-                            "}");
+            String fingerPrint = Build.FINGERPRINT;
+            JSONObject jsonBody = new JSONObject()
+                    .put("fingerPrint", fingerPrint)
+                    .put("manufacturer", Build.MANUFACTURER)
+                    .put("brand", Build.BRAND)
+                    .put("model", Build.MODEL)
+                    .put("sdk", Build.VERSION.SDK_INT);
+            CustomJsonObjectRequest registerDeviceRequest = new CustomJsonObjectRequest(
+                    Request.Method.POST,
+                    PUT_REGISTER_DEVICE_REQUEST_URL,
+                    sessionBearerToken,
+                    jsonBody,
+                    response -> {
+                        updateApplicationStatusText(REGISTER_DEVICE_SUCCESSFUL);
+                        Log.i(TAG, LOG_REGISTER_DEVICE_SUCCESSFUL);
+                        deviceFingerPrint = fingerPrint;
+                    },
+                    error -> {
+                        updateApplicationStatusText(ERROR_REGISTER_DEVICE_FAILED);
+                        logErrorToDisplay(error.toString());
+                        //Log.e(TAG, LOG_REGISTER_DEVICE_REQUEST_ERROR + error);
+                        Sentry.captureMessage(LOG_REGISTER_DEVICE_REQUEST_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
+                    }
+            );
+            Log.i(TAG, LOG_TRYING_REGISTER_DEVICE);
+            requestQueue.add(registerDeviceRequest);
         } catch (JSONException e) {
-            Log.e(TAG,"Error Creating RequestBody");
-            e.printStackTrace();
+            updateApplicationStatusText(ERROR_REGISTER_DEVICE_REQUEST_BODY);
+            logErrorToDisplay(e.toString());
+            //Log.e(TAG, LOG_REGISTER_DEVICE_ERROR, e);
+            Sentry.captureMessage(LOG_REGISTER_DEVICE_ERROR + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
+
         }
-        return new JSONObject();
     }
 
-    // Request the location-permissions if not already granted
-    private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                            != PackageManager.PERMISSION_GRANTED) {
-                        if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                            builder.setTitle("This app needs background location access");
-                            builder.setMessage("Please grant location access so this app can detect beacons in the background.");
-                            builder.setPositiveButton(android.R.string.ok, null);
-                            builder.setOnDismissListener(dialog -> requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                                    PERMISSION_REQUEST_BACKGROUND_LOCATION));
-                            builder.show();
-                        }
-                        else {
-                            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                            builder.setTitle("Functionality limited");
-                            builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons in the background.  Please go to Settings -> Applications -> Permissions and grant background location access to this app.");
-                            builder.setPositiveButton(android.R.string.ok, null);
-                            builder.setOnDismissListener(dialog -> {
-                            });
-                            builder.show();
-                        }
-                    }
+    //
+    //
+    // Signal Data Collecting and Sending
+    //
+    //
+
+    @Override
+    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+        ITransaction sentryTransaction = Sentry.startTransaction("rangNotifierTransaction", "collectingSignals");
+        Date detectionTimestamp = Calendar.getInstance().getTime();
+        processBeaconSignalsAsynchronously(beacons, detectionTimestamp);
+        logScannedSignalCountToDisplay();
+        sentryTransaction.finish();
+    }
+
+    private void processBeaconSignalsAsynchronously(Collection<Beacon> beacons, Date detectionTimestamp) {
+        String signalTimestampString = dateFormat.format(detectionTimestamp);
+        new Thread(() -> {
+            if (sessionBearerToken != null & deviceFingerPrint != null) {
+                //Log.d(TAG,  LOG_RANGED_BEACONS_COUNT + beacons.size());
+                if (beacons.size() != 0) {
+                    detectedSignalsCount += beacons.size();
+                    collectAndSendSignals(beacons, signalTimestampString);
+                    logScannedSignalCountToDisplay();
                 }
             } else {
-                if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                            PERMISSION_REQUEST_FINE_LOCATION);
-                }
-                else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons.  Please go to Settings -> Applications -> Permissions and grant location access to this app.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(dialog -> {
-                    });
-                    builder.show();
-                }
-
+                Log.w(TAG, LOG_WARN_RANGING_BUT_NOT_COLLECTING + beacons.size());
             }
-        }
+        }).start();
     }
 
-    // Check Bluetooth functionalities
-    private void verifyBluetooth() {
-        try {
-            if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Bluetooth not enabled");
-                builder.setMessage("Please enable bluetooth in settings and restart this application.");
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(dialog -> finishAffinity());
-                builder.show();
-            }
-        }
-        catch (RuntimeException e) {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Bluetooth LE not available");
-            builder.setMessage("Sorry, this device does not support Bluetooth LE.");
-            builder.setPositiveButton(android.R.string.ok, null);
-            builder.setOnDismissListener(dialog -> finishAffinity());
-            builder.show();
-
-        }
-
+    private void collectAndSendSignals(Collection<Beacon> beacons, String signalTimestampString) {
+        JSONArray jsonArray = collectAllBeaconSignalsAndConvertToJsonArray(beacons, signalTimestampString);
+        createAndSendSignalsPostRequest(jsonArray);
     }
 
-    // Log the Beacon Details to the Screen when Ranging
-    private void logToDisplay(String line) {
-        runOnUiThread(() -> {
-            TextView editText = (TextView) MainActivity.this.findViewById(R.id.rangingText);
-            editText.setText(line);
-        });
-    }
-
-    // Update the visibility text
-    private void updateText(String line) {
-        runOnUiThread(() -> {
-            TextView editText = (TextView) MainActivity.this.findViewById(R.id.monitoringText);
-            editText.setText(line);
-        });
-    }
-
-    // Compare beacons -> used in Tracking logic
-    private boolean beaconMatchesBeaconDto(Beacon beacon, BeaconDto beaconDto) {
-        return beaconDto.getUuid().equals(beacon.getId1().toString())
-                && beaconDto.getMajor().equals(beacon.getId2().toString())
-                && beaconDto.getMinor().equals(beacon.getId3().toString());
-    }
-
-    // Check if beacon is registered -> used in Tracking logic
-    private boolean beaconIsRegisteredInSystem(Beacon beacon) {
-        for (BeaconDto beaconDto : knownBeaconsToTrack) {
-            if (beaconMatchesBeaconDto(beacon, beaconDto)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Triggered when Ranging Button is clicked
-    public void onRanging(View view){
-        if(!currentlyRanging) {
-            RangeNotifier rangeNotifier = (beacons, region) -> {
-                if (beacons.size() > 0) {
-                    Log.i(TAG, "didRangeBeaconsInRegion called with beacon count:  " + beacons.size());
-                    Beacon firstBeacon = beacons.iterator().next();
-
-                    logToDisplay("The first beacon " + firstBeacon.toString() + " is about " + firstBeacon.getDistance() + " meters away.");
-                }
-            };
-            beaconManager.addRangeNotifier(rangeNotifier);
-            beaconManager.startRangingBeacons(TrackingApplication.beaconRegion);
-            currentlyRanging = true;
-        } else{
-            beaconManager.stopRangingBeacons(TrackingApplication.beaconRegion);
-            beaconManager.removeAllRangeNotifiers();
-            currentlyRanging = false;
-        }
-    }
-
-    // Triggered when Monitoring Button is clicked
-    @SuppressLint("SetTextI18n")
-    public void onScan(View view) {
-        // This is a toggle.  Each time we tap it, we start or stop
-        Button button = (Button) findViewById(R.id.scanButton);
-
-        if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
-            BeaconManager.getInstanceForApplication(this).stopMonitoring(TrackingApplication.beaconRegion);
-            button.setText("Enable Monitoring");
-            updateText("Monitoring deactivated");
-        }
-        else {
-            updateText("Beacon not visible");
-            BeaconManager.getInstanceForApplication(this).startMonitoring(TrackingApplication.beaconRegion);
-            button.setText("Disable Monitoring");
-        }
-
-    }
-
-    @Override // Range Notifier -> Main Beacon-Tracking logic
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+    private JSONArray collectAllBeaconSignalsAndConvertToJsonArray(Collection<Beacon> beacons, String signalTimestampString) {
+        JSONArray result = new JSONArray();
         for (Beacon beacon: beacons) {
-            if(beaconIsRegisteredInSystem(beacon)) {
-                if (beacon.getDistance() < 1.0) {
-                    if (currentlyTrackedBeacon == null) {
-                        currentTrackingStartTime = Calendar.getInstance().getTime();
-                        currentlyTrackedBeacon = new BeaconDto(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString());
-                        Log.i(TAG, "Start Tracking Beacon UUID: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-                    } else if(!beaconMatchesBeaconDto(beacon, currentlyTrackedBeacon)) {
-                        sendNewTreatmentPostRequest();
-                        Log.i(TAG, "End Tracking Beacon UUID: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-                        currentlyTrackedBeacon = new BeaconDto(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString());
-                        currentTrackingStartTime = Calendar.getInstance().getTime();
-                        Log.i(TAG, "Start Tracking Beacon UUID: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-                    }
-                } else if(beacon.getDistance() > 10.0) {
-                    if(currentlyTrackedBeacon != null) {
-                        if(beaconMatchesBeaconDto(beacon, currentlyTrackedBeacon)) {
-                            sendNewTreatmentPostRequest();
-                            Log.i(TAG, "End Tracking Beacon UUID: " + currentlyTrackedBeacon.getUuid() + " Major: " + currentlyTrackedBeacon.getMajor() + " Minor: " + currentlyTrackedBeacon.getMinor());
-                            currentlyTrackedBeacon = null;
-                            currentTrackingStartTime = null;
-                            Log.i(TAG, "No Beacon is tracked currently");
-                        }
-                    }
-                }
+            // Collect all Beacon Signals and create JsonString for Each
+            try {
+                JSONObject beaconSignalJson = new JSONObject()
+                        .put("signalTimestamp", signalTimestampString)
+                        .put("serviceUuid", beacon.getServiceUuid())
+                        .put("uuid", beacon.getId1().toString())
+                        .put("major", beacon.getId2().toString())
+                        .put("minor", beacon.getId3().toString())
+                        .put("bluetoothAddress", beacon.getBluetoothAddress())
+                        .put("bluetoothName", beacon.getBluetoothName())
+                        .put("beaconTypeCode", beacon.getBeaconTypeCode())
+                        .put("parserIdentifier", beacon.getParserIdentifier())
+                        .put("txPower", beacon.getTxPower())
+                        .put("rssi", beacon.getRssi())
+                        .put("runningAverageRssi", beacon.getRunningAverageRssi())
+                        .put("distance", beacon.getDistance())
+                        .put("deviceFingerPrint", deviceFingerPrint);
+                result.put(beaconSignalJson);
+            } catch (JSONException e) {
+                logErrorToDisplay(ERROR_SIGNAL_REQUEST_BODY);
+                //Log.e(TAG, LOG_JSON_EXCEPTION + e);
+                Sentry.captureMessage(LOG_JSON_EXCEPTION + Arrays.toString(e.getStackTrace()), SentryLevel.ERROR);
             }
         }
+        return result;
     }
 
-    @Override // Called when at least one beacon in a Region is visible from Monitor Notifier
-    public void didEnterRegion(Region region) {
-        updateText("Beacon visible");
-        try {
-            // start ranging for beacons.  This will provide an update once per second with the estimated
-            // distance to the beacon in the didRAngeBeaconsInRegion method.
-            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
-            beaconManager.addRangeNotifier(this);
-        } catch (RemoteException e) {
-            Log.e(TAG, e.getMessage());
-        }
+    private void createAndSendSignalsPostRequest(JSONArray jsonArray) {
+        CustomJsonArrayRequest postNewSignalsListRequest = new CustomJsonArrayRequest(
+                Request.Method.POST,
+                POST_NEW_SIGNALS_REQUEST_URL,
+                sessionBearerToken,
+                jsonArray,
+                response -> {// TODO: get new token and update session token//Log.d(TAG, LOG_POST_REQUEST_RESPONSE + response.toString());
+                },
+                error -> {
+                    logErrorToDisplay(ERROR_SIGNAL_POST_REQUEST);
+                    //Log.e(TAG, LOG_POST_REQUEST_ERROR + error.toString());
+                    Sentry.captureMessage(LOG_POST_REQUEST_ERROR + Arrays.toString(error.getStackTrace()), SentryLevel.ERROR);
+                }
+        );
+        //Log.d(TAG, LOG_POST_SIGNAL_DATA_SUCCESSFUL + postRequestBody.length());
+        requestQueue.add(postNewSignalsListRequest);
     }
 
-    @Override // Called when no beacons in a Region are visible from MonitorNotifier
-    public void didExitRegion(Region region) {
-        updateText("Beacon not visible");
-    }
+    //
+    //
+    // Bluetooth & Permissions
+    //
+    //
 
-    @Override // Called with a state value when at least one or no beacons in a Region are visible from Monitor Notifier
-    public void didDetermineStateForRegion(int state, Region region) {
-    }
-
-    @Override // Override Method in FragmentActivity
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
@@ -404,12 +347,152 @@ public class MainActivity extends AppCompatActivity  implements MonitorNotifier,
                     builder.setTitle("Functionality limited");
                     builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons when in the background.");
                     builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(dialog -> {
-                    });
+                    builder.setOnDismissListener(dialog -> { });
                     builder.show();
                 }
             }
         }
+    }
+
+    private void requestPermissions() {
+        if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("This app needs background location access");
+                    builder.setMessage("Please grant location access so this app can detect beacons in the background.");
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(dialog -> requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, PERMISSION_REQUEST_BACKGROUND_LOCATION));
+                    builder.show();
+                }
+                else {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Functionality limited");
+                    builder.setMessage("Since background location access has not been granted, this app will not be able to discover beacons in the background.  Please go to Settings -> Applications -> Permissions and grant background location access to this app.");
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(dialog -> { });
+                    builder.show();
+                }
+            }
+        } else {
+            if (!this.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION}, PERMISSION_REQUEST_FINE_LOCATION);
+            }
+            else {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Functionality limited");
+                builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons.  Please go to Settings -> Applications -> Permissions and grant location access to this app.");
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(dialog -> { });
+                builder.show();
+            }
+        }
+    }
+
+    private void verifyBluetooth() {
+        try {
+            if (!BeaconManager.getInstanceForApplication(this).checkAvailability()) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Bluetooth not enabled");
+                builder.setMessage("Please enable bluetooth in settings and restart this application.");
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(dialog -> finishAffinity());
+                builder.show();
+            }
+        } catch (RuntimeException e) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Bluetooth LE not available");
+            builder.setMessage("Sorry, this device does not support Bluetooth LE.");
+            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setOnDismissListener(dialog -> finishAffinity());
+            builder.show();
+
+        }
+
+    }
+
+    //
+    //
+    // BUTTON-Listener Methods
+    //
+    //
+
+    public void increaseScanRateButtonListener(View view) {
+        Log.i(TAG, LOG_INCREASE_SCAN_RATE_BUTTON_CLICKED);
+        if (beaconManagerScanPeriod < 1000) {
+            beaconManagerScanPeriod = beaconManagerScanPeriod + 100;
+        } else {
+            beaconManagerScanPeriod = 100;
+        }
+        updateCurrentScanningRateTest(String.valueOf(beaconManagerScanPeriod));
+        initializeBeaconManager();
+        updateApplicationStatusText(SCAN_RATE_CHANGED_TO + beaconManagerScanPeriod);
+    }
+
+    public void startStopRangingButtonListener(View view){
+        Log.i(TAG, LOG_RANGING_BUTTON_CLICKED);
+        if(!currentlyRanging) {
+            beaconManager.addRangeNotifier(this);
+            beaconManager.startRangingBeacons(BEACON_REGION);
+            currentlyRanging = true;
+            updateApplicationStatusText(RANGING_RUNNING_APP_STATUS);
+            Log.i(TAG, RANGING_STARTED);
+
+        } else{
+            beaconManager.stopRangingBeacons(BEACON_REGION);
+            beaconManager.removeAllRangeNotifiers();
+            currentlyRanging = false;
+            updateApplicationStatusText(RANGING_PAUSED_APP_STATUS);
+        }
+    }
+
+    public void retryLoginButtonListener(View view) {
+        Log.i(TAG, LOG_RETRY_LOGIN_BUTTON_CLICKED);
+        updateApplicationStatusText(RETRY_LOGIN);
+        requestMockLoginToGetBearerTokenAndRegisterDevice();
+    }
+
+    public void clearErrorLogButtonListener(View view) {
+        Log.i(TAG, LOG_CLEAR_ERRORS_BUTTON_CLICKED);
+        runOnUiThread(() -> {
+            TextView errorLog = MainActivity.this.findViewById(R.id.errorLog);
+            errorLog.setText(NO_ERRORS);
+        });
+    }
+
+    //
+    //
+    // UI-Text-Update methods
+    //
+    //
+
+    private void updateCurrentScanningRateTest(String currentRate) {
+        runOnUiThread(() -> {
+            TextView editText = MainActivity.this.findViewById(R.id.currentScanningRate);
+            editText.setText(currentRate);
+        });
+    }
+
+    private void updateApplicationStatusText(String line) {
+        runOnUiThread(() -> {
+            TextView editText = MainActivity.this.findViewById(R.id.applicationStatus);
+            editText.setText(line);
+        });
+    }
+
+    private void logScannedSignalCountToDisplay() {
+        runOnUiThread(() -> {
+            TextView editText = MainActivity.this.findViewById(R.id.collectedSignalCount);
+            String countLogText = COLLECTED_SIGNALS_COUNT + detectedSignalsCount;
+            editText.setText(countLogText);
+        });
+    }
+
+    private void logErrorToDisplay(String errorMessage) {
+        runOnUiThread(() -> {
+            TextView errorLog = MainActivity.this.findViewById(R.id.errorLog);
+            errorLog.setText(errorMessage);
+        });
     }
 
 }

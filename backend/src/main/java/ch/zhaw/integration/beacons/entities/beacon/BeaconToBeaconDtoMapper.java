@@ -1,7 +1,6 @@
 package ch.zhaw.integration.beacons.entities.beacon;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
 
@@ -12,10 +11,8 @@ public interface BeaconToBeaconDtoMapper {
 
     List<BeaconDto> mapBeaconListToBeaconDtoList(List<Beacon> beaconList);
 
-    @Mapping(target = "bed", ignore = true)
     Beacon mapBeaconDtoToBeacon(BeaconDto beaconDto);
 
-    @Mapping(target = "bed", ignore = true)
     List<Beacon> mapBeaconDtoListToBeaconList(List<BeaconDto> beaconDtoList);
     
 }

@@ -1,0 +1,303 @@
+{
+	"info": {
+		"_postman_id": "479c833e-e465-4d90-b7d1-f4d4398cc8ce",
+		"name": "Bachelorarbeit",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "HEROKU-INSTANCE-REQUESTS",
+			"item": [
+				{
+					"name": "HEROKU-Login/Authorize",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"admin@example.com\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://beaconsserver.herokuapp.com/beacons/api/public/admins/login",
+							"protocol": "https",
+							"host": [
+								"beaconsserver",
+								"herokuapp",
+								"com"
+							],
+							"path": [
+								"beacons",
+								"api",
+								"public",
+								"admins",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "LOKALHOST_INSTANCE_REQUESTS",
+			"item": [
+				{
+					"name": "LOKAL-Login/Authorize",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"admin@example.com\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/public/admins/login",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"public",
+								"admins",
+								"login"
+							]
+						},
+						"description": "test login doctor"
+					},
+					"response": []
+				},
+				{
+					"name": "LOKAL-Signals/backup_import",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInNjb3BlcyI6W3siYXV0aG9yaXR5IjoiUk9MRV9BRE1JTiJ9XSwiaXNzIjoiaHR0cHM6Ly9iZWFjb25zLXByb2plY3QuY29tIiwiaWF0IjoxNjQ5NDU0MTMwLCJleHAiOjE2NDk0NTUwMzB9.QDXOPqeppb1w6lBvQN2PUSwDr_m11qH5ZVTIq4fZFDA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "backup/BACKUP_erster_testlauf_08-04-2022_abend.csv",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/internal/signals/import_backup",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"internal",
+								"signals",
+								"import_backup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOKAL-Signals",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInNjb3BlcyI6W3siYXV0aG9yaXR5IjoiUk9MRV9BRE1JTiJ9XSwiaXNzIjoiaHR0cHM6Ly9iZWFjb25zLXByb2plY3QuY29tIiwiaWF0IjoxNjQ5NDU0MTMwLCJleHAiOjE2NDk0NTUwMzB9.QDXOPqeppb1w6lBvQN2PUSwDr_m11qH5ZVTIq4fZFDA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "backup/BACKUP_erster_testlauf_08-04-2022_abend.csv",
+							"options": {
+								"raw": {
+									"language": "text"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/internal/signals",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"internal",
+								"signals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOKAL-Beacons/matched",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInNjb3BlcyI6W3siYXV0aG9yaXR5IjoiUk9MRV9BRE1JTiJ9XSwiaXNzIjoiaHR0cHM6Ly9iZWFjb25zLXByb2plY3QuY29tIiwiaWF0IjoxNjQ5NDU3NDQ1LCJleHAiOjE2NDk0NTgzNDV9.5OptMmvPzeGhxYzV9j3boWi3LyUlZRu-c7FNksKnwrU",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/internal/beacons/matched?outFileName=beacons",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"internal",
+								"beacons",
+								"matched"
+							],
+							"query": [
+								{
+									"key": "routeEnd",
+									"value": "2022-04-09 20:26:00",
+									"disabled": true
+								},
+								{
+									"key": "outFileName",
+									"value": "beacons"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOKAL-Routes/calculate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInNjb3BlcyI6W3siYXV0aG9yaXR5IjoiUk9MRV9BRE1JTiJ9XSwiaXNzIjoiaHR0cHM6Ly9iZWFjb25zLXByb2plY3QuY29tIiwiaWF0IjoxNjQ5NDU3NDQ1LCJleHAiOjE2NDk0NTgzNDV9.5OptMmvPzeGhxYzV9j3boWi3LyUlZRu-c7FNksKnwrU",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/internal/routes/calculate?routeStart=2022-04-08 20:25:00&routeEnd=2022-04-08 20:29:00&type=point",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"internal",
+								"routes",
+								"calculate"
+							],
+							"query": [
+								{
+									"key": "routeStart",
+									"value": "2022-04-08 20:25:00"
+								},
+								{
+									"key": "routeEnd",
+									"value": "2022-04-08 20:29:00"
+								},
+								{
+									"key": "type",
+									"value": "point"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOKAL-Routes/export",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInNjb3BlcyI6W3siYXV0aG9yaXR5IjoiUk9MRV9BRE1JTiJ9XSwiaXNzIjoiaHR0cHM6Ly9iZWFjb25zLXByb2plY3QuY29tIiwiaWF0IjoxNjQ5MzUzMDkwLCJleHAiOjE2NDkzNTM5OTB9.Zp9dAUDEbGGMOJjdqGYjgdEh9Tq461PKbkwapLMqzXU",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://192.168.1.188:8081/beacons/api/internal/routes/export?routeId=21&type=point",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"188"
+							],
+							"port": "8081",
+							"path": [
+								"beacons",
+								"api",
+								"internal",
+								"routes",
+								"export"
+							],
+							"query": [
+								{
+									"key": "routeId",
+									"value": "21"
+								},
+								{
+									"key": "type",
+									"value": "point"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

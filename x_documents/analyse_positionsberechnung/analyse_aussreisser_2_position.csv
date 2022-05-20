@@ -1,0 +1,2 @@
+﻿Calculation-Method;Calculation Time;Route Start-Time;Rout End-time;Device-Fingerprint;Device-ID;geopos;Geoposition;Position Time;Estimated Floor;signals_floors;Signal 1 ID;Signal 1 Beacon-ID;Signal 2 ID;Signal 2 Beacon-ID;Signal 3 ID;Signal 3 Beacon-ID;
+TRILATERATION_NO_SMOOTHING;Wed Apr 20 01:46:58 CEST 2022;17.04.2022 18:27;17.04.2022 18:29;OnePlus/Nord_EEA/Nord:11/RP1A.201005.001/2203101723:user/release-keys;1;(47.37920689750174|8.537843293995081|-2);47.37920689750174,8.537843293995081;17.04.2022 18:27;-2;-2,-2,-2,;20390;358;20394;350;20392;374;
