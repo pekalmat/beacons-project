@@ -1,69 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
-    <changeSet author="Mati (generated)" id="1638037288843-1">
-        <createSequence sequenceName="beacon_id_seq"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-2">
-        <createSequence sequenceName="bed_id_seq"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-3">
-        <createSequence sequenceName="patient_id_seq"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-4">
+
+    <changeSet author="Mateusz Pekalski" id="Create-person-table">
+        <comment>Init Table person</comment>
         <createSequence sequenceName="person_id_seq"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-5">
-        <createSequence sequenceName="treatment_id_seq"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-6">
-        <createTable tableName="beacon">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="major" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="minor" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="uuid" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="bed_id" type="BIGINT"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-7">
-        <createTable tableName="bed">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="beacon_id" type="BIGINT"/>
-            <column name="patient_id" type="BIGINT"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-8">
-        <createTable tableName="patient">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="ahv_nr" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="first_name" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="surname" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="bed_id" type="BIGINT"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-9">
         <createTable tableName="person">
             <column name="dtype" type="VARCHAR(31)">
                 <constraints nullable="false"/>
             </column>
-            <column name="id" type="BIGINT">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="person_id_seq">
                 <constraints nullable="false"/>
             </column>
             <column name="email" type="VARCHAR(255)">
@@ -79,50 +24,158 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-10">
-        <createTable tableName="treatment">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="comment" type="VARCHAR(255)"/>
-            <column name="end_time" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="start_time" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="doctor_id" type="BIGINT"/>
-            <column name="patient_id" type="BIGINT"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-11">
-        <addPrimaryKey columnNames="id" constraintName="beacon_pkey" tableName="beacon"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-12">
-        <addPrimaryKey columnNames="id" constraintName="bed_pkey" tableName="bed"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-13">
-        <addPrimaryKey columnNames="id" constraintName="patient_pkey" tableName="patient"/>
-    </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-14">
         <addPrimaryKey columnNames="id" constraintName="person_pkey" tableName="person"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-15">
-        <addPrimaryKey columnNames="id" constraintName="treatment_pkey" tableName="treatment"/>
+
+    <changeSet author="Mateusz Pekalski" id="Create-beacon-table">
+        <comment>Init Table beacon</comment>
+        <createSequence sequenceName="beacon_id_seq"/>
+        <createTable tableName="beacon">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="beacon_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="major" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minor" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="geopos" type="VARCHAR(255)"/>
+            <column name="register_source" type="VARCHAR(255)"/>
+            <column name="standort" type="VARCHAR(255)"/>
+            <column name="geoposition" type="VARCHAR(255)"/>
+            <column name="floor" type="VARCHAR(255)"/>
+            <column name="x_coordinate" type ="DOUBLE PRECISION"/>
+            <column name="y_coordinate" type ="DOUBLE PRECISION"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="beacon_pkey" tableName="beacon"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-16">
-        <addForeignKeyConstraint baseColumnNames="bed_id" baseTableName="patient" constraintName="fk833k041j9274jwm6v3xm0f05f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="bed"/>
+
+    <changeSet author="Mateusz Pekalski" id="Create-device-table">
+        <comment>Adding Device Table representing test-device</comment>
+        <createSequence sequenceName="device_id_seq" incrementBy="1" />
+        <createTable tableName="device">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="device_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finger_print" type="VARCHAR(255)"/>
+            <column name="manufacturer" type="VARCHAR(255)"/>
+            <column name="brand" type="VARCHAR(255)"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="sdk" type="INT"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="device_pkey" tableName="device"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-17">
-        <addForeignKeyConstraint baseColumnNames="bed_id" baseTableName="beacon" constraintName="fkabdsqxfrfrquywpc475nbuwdo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="bed"/>
+
+    <changeSet author="Mateusz Pekalski" id="Create-signal-table">
+        <comment>Adding Signal Table representing recognised beacon-signals</comment>
+        <createSequence sequenceName="signal_id_seq" incrementBy="1" />
+        <createTable tableName="signal">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="signal_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="signal_timestamp" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="uuid" type="VARCHAR(255)"/>
+            <column name="major" type="VARCHAR(255)"/>
+            <column name="minor" type="VARCHAR(255)"/>
+            <column name="service_uuid" type="INT"/>
+            <column name="bluetooth_address" type="VARCHAR(255)"/>
+            <column name="bluetooth_name" type="VARCHAR(255)"/>
+            <column name="beacon_type_code" type="INT"/>
+            <column name="parser_identifier" type="VARCHAR(255)"/>
+            <column name="tx_power" type="INT"/>
+            <column name="rssi" type="INT"/>
+            <column name="running_average_rssi" type="DOUBLE PRECISION"/>
+            <column name="distance" type="DOUBLE PRECISION"/>
+            <column name="calculated_distance" type="DOUBLE PRECISION"/>
+            <column name="beacon_id" type="BIGINT"/>
+            <column name="device_id" type="BIGINT"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="signal_pkey" tableName="signal"/>
+        <addForeignKeyConstraint baseColumnNames="beacon_id" baseTableName="signal" constraintName="beacon_id_fkey_signal" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="beacon"/>
+        <addForeignKeyConstraint baseColumnNames="device_id" baseTableName="signal" constraintName="device_id_fkey_signal" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-18">
-        <addForeignKeyConstraint baseColumnNames="beacon_id" baseTableName="bed" constraintName="fkadvvstnteuy14rwbodbkiaa3x" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="beacon"/>
+
+    <changeSet author="Mateusz Pekalski" id="Create-Route-Table">
+        <comment>Adding Route Table representing calculated Routes</comment>
+        <createSequence sequenceName="route_id_seq" incrementBy="1" />
+        <createTable tableName="route">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="route_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="device_id" type="BIGINT"/>
+            <column name="route_start" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="route_end" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="calculation_trigger_time" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="calculation_method" type="VARCHAR(255)"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="route_pkey" tableName="route"/>
+        <addForeignKeyConstraint baseColumnNames="device_id" baseTableName="route" constraintName="device_id_fkey_route" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-19">
-        <addForeignKeyConstraint baseColumnNames="doctor_id" baseTableName="treatment" constraintName="fkfq9g2h1sgjsgda11ofxj6ogqw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="person"/>
+
+    <changeSet author="Mateusz Pekalski" id="Create-Position-Table">
+        <comment>Adding Position Table representing calculated Postions on Route</comment>
+        <createSequence sequenceName="position_id_seq" incrementBy="1" />
+        <createTable tableName="position">
+            <column name="id" type="BIGINT" defaultValueSequenceNext="position_id_seq">
+                <constraints nullable="false"/>
+            </column>
+            <column name="route_id" type="BIGINT"/>
+            <column name="floors" type="VARCHAR(255)"/>
+            <column name="estimated_floor" type="INT"/>
+            <column name="x_coordinate" type="DOUBLE PRECISION"/>
+            <column name="y_coordinate" type="DOUBLE PRECISION"/>
+            <column name="position_timestamp" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="position_pkey" tableName="position"/>
+        <addForeignKeyConstraint baseColumnNames="route_id" baseTableName="position" constraintName="route_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="route"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-20">
-        <addForeignKeyConstraint baseColumnNames="patient_id" baseTableName="treatment" constraintName="fkjpqauh9f08891a82no3i8aq7o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="patient"/>
+
+    <changeSet author="Mateusz Pekalski" id="Add Signal References to Position">
+        <comment>Adding Signal References to Position Table representing 3 signals used for Postions calculation</comment>
+        <addColumn tableName="position">
+            <column name="signal1_id" type="BIGINT"/>
+            <column name="signal2_id" type="BIGINT"/>
+            <column name="signal3_id" type="BIGINT"/>
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="signal1_id" baseTableName="position" constraintName="signal1_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="signal"/>
+        <addForeignKeyConstraint baseColumnNames="signal2_id" baseTableName="position" constraintName="signal2_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="signal"/>
+        <addForeignKeyConstraint baseColumnNames="signal3_id" baseTableName="position" constraintName="signal3_id_fkey_position" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="signal"/>
     </changeSet>
-    <changeSet author="Mati (generated)" id="1638037288843-21">
-        <addForeignKeyConstraint baseColumnNames="patient_id" baseTableName="bed" constraintName="fkowulq1hhbpncuwrfxlaspshwu" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="patient"/>
+
+    <changeSet author="Mateusz Pekalski" id="Add calculatedDistanceSlidingWindow Column to Signal">
+        <comment>Adding calculatedDistanceSlidingWindow-column to Signal table</comment>
+        <addColumn tableName="signal">
+            <column name="calculated_distance_sliding_window" type="DOUBLE PRECISION"/>
+        </addColumn>
     </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="data migration after refactoring">
+        <update tableName="route">
+            <column name="calculation_method" value="TRILATERATION_NO_SMOOTHING"/>
+            <where>calculation_method='TRILATERATION_NO_SMOOTHING_LIBRARY_DISTANCE'</where>
+        </update>
+        <update tableName="route">
+            <column name="calculation_method" value="TRILATERATION_NO_SMOOTHING"/>
+            <where>calculation_method='TRILATERATION_NO_SMOOTHING_CALCULATED_DISTANCE'</where>
+        </update>
+    </changeSet>
+
+    <changeSet author="Mateusz Pekalski" id="change double-types to bigDecimal to increase calculation precision">
+        <modifyDataType tableName="beacon" columnName="x_coordinate" newDataType="decimal"/>
+        <modifyDataType tableName="beacon" columnName="y_coordinate" newDataType="decimal"/>
+
+        <modifyDataType tableName="signal" columnName="distance" newDataType="decimal"/>
+        <modifyDataType tableName="signal" columnName="calculated_distance" newDataType="decimal"/>
+        <modifyDataType tableName="signal" columnName="calculated_distance_sliding_window" newDataType="decimal"/>
+
+        <modifyDataType tableName="position" columnName="x_coordinate" newDataType="decimal"/>
+        <modifyDataType tableName="position" columnName="x_coordinate" newDataType="decimal"/>
+
+    </changeSet>
+
 </databaseChangeLog>

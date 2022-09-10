@@ -1,7 +1,6 @@
 package ch.zhaw.integration.beacons.security;
 
 import ch.zhaw.integration.beacons.entities.person.PersonRepository;
-import ch.zhaw.integration.beacons.rest.ApiRestController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -75,7 +74,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Set permissions on endpoints
         http.authorizeRequests()
                 // Our public endpoints
-                .antMatchers(ApiRestController.API_PUBLIC_BASE_PATH + "/**").permitAll()
+                //.antMatchers(ApiRestController.API_PUBLIC_BASE_PATH + "/**").permitAll()
+                .antMatchers("/**").permitAll()
+
                 // Our private endpoints
                 .anyRequest().authenticated();
 

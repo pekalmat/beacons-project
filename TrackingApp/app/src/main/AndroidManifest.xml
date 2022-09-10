@@ -15,7 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.TrackingApp"
         android:name=".TrackingApplication"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:largeHeap="true">
+        <meta-data android:name="io.sentry.dsn" android:value="https://c96023a1369a4a99a6fbcd7ca41e6108@o1206534.ingest.sentry.io/6340126" />
+        <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+        <meta-data android:name="io.sentry.anr.enable" android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
