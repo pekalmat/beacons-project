@@ -148,9 +148,16 @@ public class RouteDataCsvExporter {
 
     private List<List<Position>> createPartitions(Route route) {
         List<Position> positions = route.getPositions();
+        List<Position> exportPositions = new ArrayList<>();
+        for(Position position : positions) {
+            if(position.getxCoordinate().doubleValue() > 0.0 && position.getyCoordinate().doubleValue() > 0.0) {
+                exportPositions.add(position);
+            }
+        }
+
         // ensure positions are sorted by PositionTimestamp
-        Collections.sort(positions);
-        List<List<Position>> partitions = ListUtils.partition(positions, 1);
+        Collections.sort(exportPositions);
+        List<List<Position>> partitions = ListUtils.partition(exportPositions, 1);
         List<List<Position>> connectedPartitions = new ArrayList<>();
         for (List<Position> partition : partitions) {
             if (connectedPartitions.size() == 0) {
